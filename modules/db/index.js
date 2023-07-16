@@ -27,5 +27,42 @@ class MongoDB {
       }
     });
   }
+
+  disconnect() {
+    if (!this.client) return;
+    this.client.close();
+    this.client = null;
+    this.db = null;
+  }
+
+  insertOne(collection, data) {
+    return new Promise((resolve, reject) => {
+      try {
+        this.db
+          .collection(collection)
+          .insertOne(data)
+          .then((result) => {
+            resolve(result);
+          });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  insertMany(collection, data) {
+    return new Promise((resolve, reject) => {
+      try {
+        this.db
+          .collection(collection)
+          .insertMany(data)
+          .then((result) => {
+            resolve(result);
+          });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
 }
 module.exports = new MongoDB();
