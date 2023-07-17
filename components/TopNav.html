@@ -1,0 +1,43 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-light">
+  <div class="container">
+    <a class="navbar-brand" href="/">Todo App</a>
+    <button
+      class="navbar-toggler"
+      type="button"
+      data-toggle="collapse"
+      data-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent"
+      aria-expanded="false"
+      aria-label="Toggle navigation"
+    >
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="/"> Home </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/tasks"> List </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/tasks/new"> New </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+<script>
+  const path = new URL(window.location.href).pathname;
+  $(`a[href="${path}"]`).parent("li.nav-item").addClass("active");
+
+  $("a.nav-link").click((e) => {
+    const target = $(e.currentTarget);
+
+    $("li.nav-item").removeClass("active");
+    target.parent("li.nav-item").addClass("active");
+  });
+</script>

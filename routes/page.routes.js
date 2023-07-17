@@ -1,14 +1,13 @@
-const path = require("path");
 const express = require("express");
 const router = express.Router();
 const MongoDB = require("../modules/db");
 
 router.get("/", (req, res) => {
-  res.sendFile(path.resolve("./pages/index.html"));
+  res.render("index.ejs");
 });
 
 router.get("/tasks/new", (req, res) => {
-  res.sendFile(path.resolve("./pages/new.html"));
+  res.render("new.ejs");
 });
 
 router.get("/tasks", (req, res) => {
