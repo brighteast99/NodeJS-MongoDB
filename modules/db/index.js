@@ -64,5 +64,21 @@ class MongoDB {
       }
     });
   }
+
+  findAll(collection) {
+    return new Promise((resolve, reject) => {
+      try {
+        this.db
+          .collection(collection)
+          .find()
+          .toArray()
+          .then((result) => {
+            resolve(result);
+          });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
 }
 module.exports = new MongoDB();

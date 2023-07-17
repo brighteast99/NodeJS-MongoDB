@@ -5,6 +5,7 @@ const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use("/", require("./routes"));
+app.set("view engine", "ejs");
 
 const mongoDB = require("./modules/db");
 
