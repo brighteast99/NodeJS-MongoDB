@@ -42,6 +42,14 @@
           </button>
           <p class="h5"><%= task.name %></p>
           <p><%= task.dueDate %>까지</p>
+
+          <button
+            id="btn-edit"
+            class="btn btn-success"
+            data-id="<%= task._id %>"
+          >
+            수정
+          </button>
         </li>
         <% }) %>
       </ul>
@@ -49,6 +57,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
     <script>
+      $("#btn-edit").click((e) => {
+        location.href = `/tasks/${e.currentTarget.dataset.id}/edit`;
+      });
       $("button.close").click((e) => {
         if (confirm(`다음 항목을 삭제합니다: ${e.currentTarget.dataset.name}`))
           $.ajax({

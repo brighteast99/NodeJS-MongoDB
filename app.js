@@ -1,11 +1,14 @@
 require("dotenv").config({ path: ".env.local" });
 const express = require("express");
+const methodOverride = require("method-override");
 
 const app = express();
 
 app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride("_method"));
 app.use("/", require("./routes"));
 app.set("view engine", "ejs");
+app.use("/public", express.static("public"));
 
 const mongoDB = require("./modules/db");
 

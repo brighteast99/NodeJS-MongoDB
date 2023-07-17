@@ -65,12 +65,12 @@ class MongoDB {
     });
   }
 
-  findAll(collection) {
+  findAll(collection, condition) {
     return new Promise((resolve, reject) => {
       try {
         this.db
           .collection(collection)
-          .find()
+          .find(condition)
           .toArray()
           .then((result) => {
             resolve(result);
@@ -81,12 +81,27 @@ class MongoDB {
     });
   }
 
-  deleteOne(collection, data) {
+  updateOne(collection, condition, data) {
     return new Promise((resolve, reject) => {
       try {
         this.db
           .collection(collection)
-          .deleteOne(data)
+          .updateOne(condition, { $set: data })
+          .then((result) => {
+            resolve(result.modifiedCount > 0);
+          });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  deleteOne(collection, condition) {
+    return new Promise((resolve, reject) => {
+      try {
+        this.db
+          .collection(collection)
+          .deleteOne(condition)
           .then((result) => {
             resolve(result.deletedCount > 0);
           });
