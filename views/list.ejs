@@ -47,17 +47,40 @@
       </div>
     </nav>
 
-    <h3>할 일 목록</h3>
-    <% for(const task of tasks) {%>
-    <h4>할 일: <%= task.name %></h4>
-    <p>기한: <%= task.dueDate %></p>
-    <% } %>
+    <div class="container p-3">
+      <ul class="list-group">
+        <% for(const task of tasks) { %>
+        <li class="list-group-item">
+          <button
+            type="button"
+            class="close position-absolute"
+            style="right: 1rem; top: 50%; transform: translateY(-50%)"
+            data-id="<%= task._id %>"
+          >
+            X
+          </button>
+          <p class="h5"><%= task.name %></p>
+          <%= task.dueDate %>까지
+        </li>
+        <% } %>
+      </ul>
+    </div>
 
-    <script
-      src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
-      integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-      crossorigin="anonymous"
-    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+    <script>
+      $("button.close").click((e) => {
+        $.ajax({
+          method: "DELETE",
+          url: `/api/tasks/${e.currentTarget.dataset.id}`,
+        })
+          .done((response) => {
+            if (response) $(e.currentTarget).parent("li").remove();
+            else alert("항목이 존재하지 않거나 이미 삭제되었습니다");
+          })
+          .fail(() => alert("삭제하지 못했습니다"));
+      });
+    </script>
+
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"

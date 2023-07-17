@@ -80,5 +80,20 @@ class MongoDB {
       }
     });
   }
+
+  deleteOne(collection, data) {
+    return new Promise((resolve, reject) => {
+      try {
+        this.db
+          .collection(collection)
+          .deleteOne(data)
+          .then((result) => {
+            resolve(result.deletedCount > 0);
+          });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
 }
 module.exports = new MongoDB();
