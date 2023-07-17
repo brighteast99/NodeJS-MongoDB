@@ -1,0 +1,8 @@
+.list-group-item-placeholder:not(:only-child) {
+  padding: 0px;
+  height: 4px;
+  border-bottom: none;
+}
+.list-group-item-placeholder:not(:only-child) * {
+  display: none;
+}

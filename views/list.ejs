@@ -13,6 +13,7 @@
       integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N"
       crossorigin="anonymous"
     />
+    <link rel="stylesheet" href="/public/util.css" />
     <title>Document</title>
   </head>
   <body>
@@ -20,35 +21,52 @@
 
     <div class="container p-3">
       <ul class="list-group">
-        <% for(const task of tasks) { %>
+        <li class="list-group-item text-center list-group-item-placeholder">
+          <p class="h5 py-3">아직 등록된 할 일이 없습니다!</p>
+          <button class="btn btn-success w-25">
+            <a class="text-white text-decoration-none" href="/tasks/new">
+              할 일 등록하기
+            </a>
+          </button>
+        </li>
+        <% tasks.forEach(task => { %>
         <li class="list-group-item">
           <button
             type="button"
             class="close position-absolute"
-            style="right: 1rem; top: 50%; transform: translateY(-50%)"
+            style="right: 1rem; top: 1rem"
+            data-name="<%= task.name %>"
             data-id="<%= task._id %>"
           >
-            X
+            ×
           </button>
           <p class="h5"><%= task.name %></p>
-          <%= task.dueDate %>까지
+          <p><%= task.dueDate %>까지</p>
         </li>
-        <% } %>
+        <% }) %>
       </ul>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
     <script>
       $("button.close").click((e) => {
-        $.ajax({
-          method: "DELETE",
-          url: `/api/tasks/${e.currentTarget.dataset.id}`,
-        })
-          .done((response) => {
-            if (response) $(e.currentTarget).parent("li").remove();
-            else alert("항목이 존재하지 않거나 이미 삭제되었습니다");
+        if (confirm(`다음 항목을 삭제합니다: ${e.currentTarget.dataset.name}`))
+          $.ajax({
+            method: "DELETE",
+            url: `/api/tasks/${e.currentTarget.dataset.id}`,
           })
-          .fail(() => alert("삭제하지 못했습니다"));
+            .done((response) => {
+              if (response) $(e.currentTarget).parent("li").remove();
+              else
+                alert(
+                  "삭제에 실패했습니다.\n항목이 존재하지 않거나 이미 삭제되었을 수 있습니다."
+                );
+            })
+            .fail(() =>
+              alert(
+                "삭제에 실패했습니다.\n나중에 다시 시도하거나 관리자에게 문의해주세요."
+              )
+            );
       });
     </script>
 
