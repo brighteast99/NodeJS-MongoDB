@@ -8,7 +8,7 @@ router.get("/", (req, res) => {
 });
 
 router.get("/tasks/new", (req, res) => {
-  res.render("new.ejs");
+  res.render("form.ejs", { createMode: true });
 });
 
 router.get("/tasks/:id/edit", (req, res) => {
@@ -22,7 +22,7 @@ router.get("/tasks/:id/edit", (req, res) => {
   MongoDB.findAll("task", { _id: _id })
     .then((task) => {
       if (!task.length) res.status(404).send();
-      else res.render("edit.ejs", { task: task[0] });
+      else res.render("form.ejs", { createMode: false, task: task[0] });
     })
     .catch(() => res.status(500).send());
 });
