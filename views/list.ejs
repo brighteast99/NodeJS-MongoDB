@@ -22,10 +22,10 @@
     <div class="container p-3">
       <ul class="list-group">
         <li class="list-group-item text-center list-group-item-placeholder">
-          <p class="h5 py-3">아직 등록된 할 일이 없습니다!</p>
+          <p class="h5 py-3">No task has been registered yet.</p>
           <button class="btn btn-success w-25">
             <a class="text-white text-decoration-none" href="/tasks/new">
-              할 일 등록하기
+              Add new task
             </a>
           </button>
         </li>
@@ -41,14 +41,14 @@
             ×
           </button>
           <p class="h5"><%= task.name %></p>
-          <p><%= task.dueDate %>까지</p>
+          <p><%= task.dueDate %></p>
 
           <button
             name="btn-edit"
             class="btn btn-success"
             data-id="<%= task._id %>"
           >
-            수정
+            Edit
           </button>
         </li>
         <% }) %>
@@ -62,7 +62,11 @@
         location.href = `/tasks/${e.currentTarget.dataset.id}/edit`;
       });
       $("button.close").click((e) => {
-        if (confirm(`다음 항목을 삭제합니다: ${e.currentTarget.dataset.name}`))
+        if (
+          confirm(
+            `Are you sure to delete task ${e.currentTarget.dataset.name}?`
+          )
+        )
           $.ajax({
             method: "DELETE",
             url: `/api/tasks/${e.currentTarget.dataset.id}`,
@@ -71,12 +75,12 @@
               if (response) $(e.currentTarget).parent("li").remove();
               else
                 alert(
-                  "삭제에 실패했습니다.\n항목이 존재하지 않거나 이미 삭제되었을 수 있습니다."
+                  "Failed to delete the task.\nThe task may not exist or may have already been deleted."
                 );
             })
             .fail(() =>
               alert(
-                "삭제에 실패했습니다.\n나중에 다시 시도하거나 관리자에게 문의해주세요."
+                "Failed to delete the task.\nPlease try again later or contact the administrator."
               )
             );
       });
