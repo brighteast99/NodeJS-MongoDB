@@ -6,9 +6,9 @@ const app = express();
 
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
+app.use("/public", express.static("public"));
 app.use("/", require("./routes"));
 app.set("view engine", "ejs");
-app.use("/public", express.static("public"));
 
 const mongoDB = require("./modules/db");
 

@@ -33,4 +33,8 @@ router.get("/tasks", (req, res) => {
     .catch(() => res.status(500).send());
 });
 
+router.get("*", (req, res) => {
+  res.status(404).render("404.ejs");
+});
+
 module.exports = router;
