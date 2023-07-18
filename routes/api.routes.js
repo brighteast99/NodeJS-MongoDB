@@ -25,10 +25,13 @@ router.put("/tasks/:id", (req, res) => {
     return res.status(400).send();
   }
 
-  const toUpdate = {};
-  if (req.body.taskName) toUpdate.name = req.body.taskName;
-  if (req.body.taskDueDate) toUpdate.dueDate = req.body.taskDueDate;
-  if (Object.keys(toUpdate).length === 0) return res.status(400).send();
+  if (!req.body.taskName || !req.body.taskDueDate)
+    return res.status(400).send();
+
+  const toUpdate = {
+    name: req.body.taskName,
+    dueDate: req.body.taskDueDate,
+  };
 
   MongoDB.updateOne("task", { _id: _id }, toUpdate)
     .then(() => res.redirect("/tasks"))
