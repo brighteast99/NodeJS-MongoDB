@@ -28,6 +28,19 @@ class MongoDB {
     });
   }
 
+  close() {
+    return new Promise((resolve, reject) => {
+      if (!this.client) return resolve();
+      this.client
+        .close()
+        .then(() => {
+          this.client = null;
+          resolve();
+        })
+        .catch((err) => reject(err));
+    });
+  }
+
   disconnect() {
     if (!this.client) return;
     this.client.close();
