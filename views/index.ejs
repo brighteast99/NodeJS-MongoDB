@@ -23,11 +23,15 @@
         <h1 class="display-4">Welcome!</h1>
         <p class="lead">This is a simple to-do list management app.</p>
         <hr class="my-4" />
+        <% if(!user) {%>
         <p>Login and get started!</p>
         <a class="btn btn-outline-primary" href="/login" role="button">
           Login
         </a>
         <a class="btn btn-primary" href="/register" role="button">Register</a>
+        <%} else {%>
+        <p></p>
+        <% }%>
       </div>
     </div>
 
