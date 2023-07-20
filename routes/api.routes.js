@@ -4,10 +4,13 @@ const MongoDB = require("../modules/db");
 const ObjectId = require("mongodb").ObjectId;
 const passport = require("passport");
 const bcrypt = require("bcrypt-nodejs");
-const encrypt = require("../modules/auth/encrypt");
+const { hash } = require("../modules/auth");
 
 router.post("/login", passport.authenticate("local"), function (req, res) {
-  res.redirect("/");
+  req.login(req.user, (err) => {
+    if (err) res.status(500).send();
+    res.redirect("/");
+  });
 });
 
 router.post("/register", (req, res) => {
@@ -22,7 +25,7 @@ router.post("/register", (req, res) => {
         password: req.body.password,
         salt: bcrypt.genSaltSync(10),
       };
-      newUser.password = encrypt(newUser.password, newUser.salt);
+      newUser.password = hash(newUser.password, newUser.salt);
 
       MongoDB.insertOne("user", newUser).then(() => res.status(200).send());
     })

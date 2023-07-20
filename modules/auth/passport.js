@@ -1,6 +1,6 @@
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
-const encrypt = require("./encrypt");
+const { hash } = require(".");
 const MongoDB = require("../db");
 
 module.exports = () => {
@@ -9,7 +9,16 @@ module.exports = () => {
   });
 
   passport.deserializeUser((id, done) => {
-    done(null, {});
+    MongoDB.findOne("user", { id: id })
+      .then((result) => {
+        done(null, result);
+      })
+      .catch((err) => {
+        console.error(err);
+        const error = new Error();
+        error.status = 500;
+        done(error);
+      });
   });
 
   passport.use(
@@ -24,11 +33,19 @@ module.exports = () => {
         MongoDB.findAll("user", { id: id })
           .then((result) => {
             if (!result.length) return done(null, false);
-            if (result[0].password === encrypt(password, result[0].salt))
+            if (result[0].password === hash(password, result[0].salt))
               return done(null, result[0]);
-            return done(null, false);
+
+            const error = new Error();
+            error.status = 401;
+            done(error);
           })
-          .catch((err) => done(err));
+          .catch((err) => {
+            console.error(err);
+            const error = new Error();
+            error.status = 500;
+            done(error);
+          });
       }
     )
   );

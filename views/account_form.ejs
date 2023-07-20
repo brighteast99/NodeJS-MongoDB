@@ -87,8 +87,6 @@
           data: accountData,
         })
           .done((response) => {
-            if (!register && !response)
-              return alert("Login failed.\nPlease check your ID and password.");
             if (register)
               alert(
                 "You have successfully registered.\nRedirecting to login screen."
@@ -99,6 +97,9 @@
             switch (xhr.status) {
               case 400:
                 alert("Please fill out all fields.");
+                break;
+              case 401:
+                alert("Login failed.\nPlease check your ID and password.");
                 break;
               case 409:
                 alert("This ID is already taken.");

@@ -11,14 +11,22 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.use(
   session({
+    key: "connect.sid",
     secret: process.env.SESSION_SECRET,
-    resave: true,
+    resave: false,
     saveUninitialized: false,
+    cookie: {
+      maxAge: 24 * 60 * 60 * 1000 * 1,
+    },
   })
 );
 app.use(passport.initialize());
 app.use(passport.session());
 passportConfig();
+app.use((req, res, next) => {
+  if (!req.isAuthenticated()) res.clearCookie("connect.sid");
+  next();
+});
 app.use("/public", express.static("public"));
 app.use("/", require("./routes"));
 app.set("view engine", "ejs");

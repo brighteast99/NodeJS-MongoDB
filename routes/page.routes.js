@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { needLogin } = require("../modules/auth");
 const MongoDB = require("../modules/db");
 const ObjectId = require("mongodb").ObjectId;
 
@@ -8,6 +9,8 @@ router.get("/", (req, res) => {
 });
 
 router.get("/login", (req, res) => {
+  if (req.isAuthenticated()) return res.redirect("/");
+
   res.render("account_form.ejs", { registerMode: false });
 });
 
