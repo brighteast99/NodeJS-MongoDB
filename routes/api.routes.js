@@ -13,9 +13,9 @@ router.post("/login", passport.authenticate("local"), function (req, res) {
 router.post("/register", (req, res) => {
   if (!req.body.id || !req.body.password) return res.status(400).send();
 
-  MongoDB.findAll("user", { id: req.body.id })
+  MongoDB.findOne("user", { id: req.body.id })
     .then((result) => {
-      if (result.length > 0) return res.status(409).send();
+      if (result) return res.status(409).send();
 
       const newUser = {
         id: req.body.id,

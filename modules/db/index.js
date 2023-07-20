@@ -94,6 +94,21 @@ class MongoDB {
     });
   }
 
+  findOne(collection, condition) {
+    return new Promise((resolve, reject) => {
+      try {
+        this.db
+          .collection(collection)
+          .findOne(condition)
+          .then((result) => {
+            resolve(result);
+          });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
   updateOne(collection, condition, data) {
     return new Promise((resolve, reject) => {
       try {

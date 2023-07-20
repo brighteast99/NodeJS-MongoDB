@@ -27,10 +27,10 @@ router.get("/tasks/:id/edit", (req, res) => {
     return res.status(400).send();
   }
 
-  MongoDB.findAll("task", { _id: _id })
+  MongoDB.findOne("task", { _id: _id })
     .then((task) => {
-      if (!task.length) res.status(404).send();
-      else res.render("form.ejs", { createMode: false, task: task[0] });
+      if (!task) res.status(404).send();
+      else res.render("form.ejs", { createMode: false, task: tas });
     })
     .catch(() => res.status(500).send());
 });
