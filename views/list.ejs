@@ -41,7 +41,10 @@
             ×
           </button>
           <p class="h5"><%= task.name %></p>
-          <p><%= task.dueDate %></p>
+          <% let dueDate = new Date(task.dueDate) %>
+          <p class="<%= dueDate < new Date() ? 'text-danger' : 'text-muted' %>">
+            <%= formatDate(dueDate) %>
+          </p>
 
           <button
             name="btn-edit"

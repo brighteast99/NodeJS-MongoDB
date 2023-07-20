@@ -1,5 +1,7 @@
 const bcrypt = require("bcrypt-nodejs");
+
 const saltRounds = 10;
+module.exports.SALT_ROUNDS = saltRounds;
 
 module.exports.hash = (plaintext, salt) => {
   return bcrypt.hashSync(plaintext, salt);
