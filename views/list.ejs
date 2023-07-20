@@ -58,7 +58,6 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
     <script>
       $("button[name='btn-edit']").click((e) => {
-        console.log(`/tasks/${e.currentTarget.dataset.id}/edit`);
         location.href = `/tasks/${e.currentTarget.dataset.id}/edit`;
       });
       $("button.close").click((e) => {

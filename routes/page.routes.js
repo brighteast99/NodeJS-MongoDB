@@ -7,6 +7,14 @@ router.get("/", (req, res) => {
   res.render("index.ejs");
 });
 
+router.get("/login", (req, res) => {
+  res.render("account_form.ejs", { registerMode: false });
+});
+
+router.get("/register", (req, res) => {
+  res.render("account_form.ejs", { registerMode: true });
+});
+
 router.get("/tasks/new", (req, res) => {
   res.render("form.ejs", { createMode: true });
 });
@@ -31,10 +39,6 @@ router.get("/tasks", (req, res) => {
   MongoDB.findAll("task")
     .then((tasks) => res.render("list.ejs", { tasks: tasks }))
     .catch(() => res.status(500).send());
-});
-
-router.get("*", (req, res) => {
-  res.status(404).render("404.ejs");
 });
 
 module.exports = router;

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, shrink-to-fit=no"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+      integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N"
+      crossorigin="anonymous"
+    />
+    <title>Document</title>
+  </head>
+  <body>
+    <div class="container d-flex p-3 vh-100" style="max-width: 480px">
+      <div class="w-100 align-self-center">
+        <div class="form-group text-center">
+          <a
+            class="h3 text-dark font-weight-bold text-decoration-none"
+            href="/"
+          >
+            Todo App
+          </a>
+        </div>
+        <form
+          id="form-account"
+          name="<%= registerMode ? 'register' : 'login' %>"
+          method="POST"
+        >
+          <div class="form-group">
+            <input
+              id="input-id"
+              class="form-control"
+              name="id"
+              placeholder="ID"
+            />
+          </div>
+          <div class="form-group">
+            <input
+              id="input-pw"
+              class="form-control"
+              name="password"
+              type="password"
+              placeholder="PW"
+            />
+          </div>
+          <div class="form-group">
+            <button
+              id="button-submit"
+              type="submit"
+              class="btn btn-success btn-block"
+            >
+              <%= registerMode ? 'Register' : 'Login'%>
+            </button>
+          </div>
+        </form>
+        <p class="text-muted">
+          <% if(registerMode) {%> Already have an account?
+          <a href="/login">Login</a>
+          <% } else { %> Don't have an account yet?
+          <a href="/register">Register</a>
+          <% } %>
+        </p>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+    <script>
+      $("#form-account").submit((e) => {
+        e.preventDefault();
+        const form = $(e.currentTarget);
+        let register = form.attr("name") === "register";
+
+        let formData = form.serializeArray();
+        let accountData = {};
+        formData.forEach((field) => {
+          accountData[field.name] = field.value;
+        });
+
+        $.ajax({
+          method: "POST",
+          url: `/api/${register ? "register" : "login"}`,
+          data: accountData,
+        })
+          .done((response) => {
+            if (!register && !response)
+              return alert("Login failed.\nPlease check your ID and password.");
+            if (register)
+              alert(
+                "You have successfully registered.\nRedirecting to login screen."
+              );
+            location.href = register ? "/login" : "/";
+          })
+          .fail((xhr) => {
+            switch (xhr.status) {
+              case 400:
+                alert("Please fill out all fields.");
+                break;
+              case 409:
+                alert("This ID is already taken.");
+                break;
+              case 500:
+                alert(
+                  `Failed to ${
+                    register ? "register" : "login"
+                  }.\nPlease try again later or contact the administrator.`
+                );
+                break;
+            }
+          });
+      });
+    </script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+      integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
