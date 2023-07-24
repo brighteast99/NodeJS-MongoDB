@@ -35,6 +35,7 @@
             class="form-control"
             name="taskName"
             required
+            autofocus
             value="<%= createMode ? '' : task.name %>"
           />
         </div>
@@ -98,6 +99,7 @@
     <script>
       $("input[type='number']")
         .keypress((e) => {
+          if (e.key == "Enter") return;
           if (isNaN(parseInt(e.key))) e.preventDefault();
         })
         .keyup((e) => {

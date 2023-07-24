@@ -5,13 +5,22 @@ const ObjectId = require("mongodb").ObjectId;
 const { formatDate, formatInputDate } = require("../modules/utils/");
 
 router.get("/", (req, res) => {
-  MongoDB.findAll("task", { owner: req.user._id })
-    .then((tasks) =>
+  const query = req.query.name;
+
+  let condition = {
+    owner: req.user._id,
+  };
+
+  if (query) condition.name = new RegExp(query, "i");
+
+  MongoDB.findAll("task", condition)
+    .then((tasks) => {
       res.render("list.ejs", {
         tasks: tasks,
+        query: query,
         formatDate: formatDate,
-      })
-    )
+      });
+    })
     .catch(() => res.status(500).send());
 });
 

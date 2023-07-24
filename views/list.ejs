@@ -20,14 +20,36 @@
     <%- include("../components/TopNav.html") %>
 
     <div class="container p-3">
+      <% if(tasks.length || query) { %>
+      <form id="search" class="mb-2 mx-auto" style="max-width: 480px">
+        <div class="input-group">
+          <input id="input-search" class="form-control" value="<%= query %>" />
+          <button
+            type="submit"
+            class="input-group-append btn btn-success"
+            style="border-top-left-radius: 0; border-bottom-left-radius: 0"
+          >
+            Search
+          </button>
+        </div>
+      </form>
+      <% } %>
+
       <ul class="list-group">
         <li class="list-group-item text-center list-group-item-placeholder">
-          <p class="h5 py-3">No task has been registered yet.</p>
-          <button class="btn btn-success w-25">
-            <a class="text-white text-decoration-none" href="/tasks/new">
-              Add new task
-            </a>
-          </button>
+          <% if(query) { %>
+          <p class="h5 font-weight-light py-3">
+            No result containing "
+            <span class="font-weight-bold"> <%= query %> </span>
+            "
+          </p>
+          <% } else { %>
+          <p>No task has been registered yet.</p>
+          <% } %> <% if(!query) { %>
+          <a class="btn btn-success w-25" href="/tasks/new"> Add new task </a>
+          <% } else { %>
+          <button id="clear" class="btn btn-success w-25">Clear filter</button>
+          <% } %>
         </li>
         <% tasks.forEach(task => { %>
         <li class="list-group-item">
@@ -60,6 +82,17 @@
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
     <script>
+      $("form#search").submit((e) => {
+        e.preventDefault();
+
+        let url = "/tasks";
+        const keyword = $("input#input-search").val()?.trim();
+        if (keyword) url += `?name=${keyword}`;
+        location.replace(url);
+      });
+
+      $("button#clear").click(() => location.replace("/tasks"));
+
       $("button[name='btn-edit']").click((e) => {
         location.href = `/tasks/${e.currentTarget.dataset.id}/edit`;
       });
@@ -74,8 +107,12 @@
             url: `/api/tasks/${e.currentTarget.dataset.id}`,
           })
             .done((response) => {
-              if (response) $(e.currentTarget).parent("li").remove();
-              else
+              if (response) {
+                const item = $(e.currentTarget).parent("li");
+                if (item.siblings().length == 1 && !location.search)
+                  $("form#search").remove();
+                item.remove();
+              } else
                 alert(
                   "Failed to delete the task.\nThe task may not exist or may have already been deleted."
                 );
