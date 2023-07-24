@@ -12,7 +12,6 @@ class MongoDB {
         this.client = new MongoClient(URL, {
           serverApi: {
             version: ServerApiVersion.v1,
-            strict: true,
             deprecationErrors: true,
           },
         });
@@ -83,7 +82,7 @@ class MongoDB {
       try {
         this.db
           .collection(collection)
-          .find(condition)
+          .aggregate(condition)
           .toArray()
           .then((result) => {
             resolve(result);

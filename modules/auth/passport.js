@@ -30,7 +30,7 @@ module.exports = () => {
         passReqToCallback: false,
       },
       function (id, password, done) {
-        MongoDB.findAll("user", { id: id })
+        MongoDB.findAll("user", [{ $match: { id: id } }])
           .then((result) => {
             if (!result.length) return done(null, false);
             if (result[0].password === hash(password, result[0].salt))

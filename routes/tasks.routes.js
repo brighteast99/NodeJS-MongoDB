@@ -5,23 +5,39 @@ const ObjectId = require("mongodb").ObjectId;
 const { formatDate, formatInputDate } = require("../modules/utils/");
 
 router.get("/", (req, res) => {
-  const query = req.query.name;
+  const keyword = req.query.search;
 
-  let condition = {
-    owner: req.user._id,
-  };
+  let condition = [
+    {
+      $match: {
+        owner: req.user._id,
+      },
+    },
+    {
+      $sort: { dueDate: -1 },
+    },
+  ];
 
-  if (query) condition.name = new RegExp(query, "i");
+  if (keyword)
+    condition.unshift({
+      $search: {
+        index: "nameSearch",
+        text: { query: keyword, path: "name" },
+      },
+    });
 
   MongoDB.findAll("task", condition)
     .then((tasks) => {
       res.render("list.ejs", {
         tasks: tasks,
-        query: query,
+        query: keyword,
         formatDate: formatDate,
       });
     })
-    .catch(() => res.status(500).send());
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send();
+    });
 });
 
 router.get("/new", (req, res) => {

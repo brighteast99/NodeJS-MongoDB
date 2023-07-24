@@ -23,7 +23,7 @@
       <% if(tasks.length || query) { %>
       <form id="search" class="mb-2 mx-auto" style="max-width: 480px">
         <div class="input-group">
-          <input id="input-search" class="form-control" value="<%= query %>" />
+          <input class="form-control" value="<%= query %>" name="search" />
           <button
             type="submit"
             class="input-group-append btn btn-success"
@@ -39,9 +39,8 @@
         <li class="list-group-item text-center list-group-item-placeholder">
           <% if(query) { %>
           <p class="h5 font-weight-light py-3">
-            No result containing "
+            No result containing
             <span class="font-weight-bold"> <%= query %> </span>
-            "
           </p>
           <% } else { %>
           <p>No task has been registered yet.</p>
@@ -86,8 +85,8 @@
         e.preventDefault();
 
         let url = "/tasks";
-        const keyword = $("input#input-search").val()?.trim();
-        if (keyword) url += `?name=${keyword}`;
+        const keyword = $(e.currentTarget).serialize();
+        if (keyword) url += `?${keyword}`;
         location.replace(url);
       });
 
