@@ -13,6 +13,10 @@
       integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N"
       crossorigin="anonymous"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css"
+    />
     <title>Document</title>
   </head>
   <body>
@@ -39,7 +43,7 @@
               placeholder="ID"
             />
           </div>
-          <div class="form-group">
+          <div class="form-group mb-2">
             <input
               id="input-pw"
               class="form-control"
@@ -48,15 +52,27 @@
               placeholder="PW"
             />
           </div>
-          <div class="form-group">
-            <button
-              id="button-submit"
-              type="submit"
-              class="btn btn-success btn-block"
-            >
-              <%= registerMode ? 'Register' : 'Login'%>
-            </button>
+          <% if(!registerMode) {%>
+          <div class="form-group form-check">
+            <input
+              id="input-remember"
+              class="form-check-input"
+              name="remember"
+              type="checkbox"
+              value="true"
+            />
+            <label for="input-remember" class="form-check-label text-muted">
+              30일간 로그인 유지
+            </label>
           </div>
+          <%}%>
+          <button
+            id="button-submit"
+            type="submit"
+            class="btn btn-success btn-block mb-2"
+          >
+            <%= registerMode ? 'Register' : 'Login'%>
+          </button>
         </form>
         <p class="text-muted">
           <% if(registerMode) {%> Already have an account?
@@ -72,8 +88,13 @@
     <script>
       $("#form-account").submit((e) => {
         e.preventDefault();
+
+        const submitBtn = $("button#button-submit");
+        submitBtn.attr("disabled", true);
+        submitBtn.html("<i class='fa fa-spinner fa-spin'></i>");
+
         const form = $(e.currentTarget);
-        let register = form.attr("name") === "register";
+        let registerMode = form.attr("name") === "register";
 
         let formData = form.serializeArray();
         let accountData = {};
@@ -83,15 +104,15 @@
 
         $.ajax({
           method: "POST",
-          url: `/api/${register ? "register" : "login"}`,
+          url: `/api/${registerMode ? "register" : "login"}`,
           data: accountData,
         })
           .done((response) => {
-            if (register)
+            if (registerMode)
               alert(
                 "You have successfully registered.\nRedirecting to login screen."
               );
-            location.href = register ? "/login" : "/";
+            location.href = registerMode ? "/login" : "/";
           })
           .fail((xhr) => {
             switch (xhr.status) {
@@ -107,11 +128,15 @@
               case 500:
                 alert(
                   `Failed to ${
-                    register ? "register" : "login"
+                    registerMode ? "register" : "login"
                   }.\nPlease try again later or contact the administrator.`
                 );
                 break;
             }
+          })
+          .always(() => {
+            submitBtn.attr("disabled", false);
+            submitBtn.html(registerMode ? "Register" : "Login");
           });
       });
     </script>

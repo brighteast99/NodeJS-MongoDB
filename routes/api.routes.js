@@ -6,9 +6,22 @@ const passport = require("passport");
 const bcrypt = require("bcrypt-nodejs");
 const { SALT_ROUNDS, hash, needLogin } = require("../modules/auth");
 
-router.post("/login", passport.authenticate("local"), function (req, res) {
-  req.login(req.user, (err) => {
-    if (err) res.status(500).send();
+router.post("/login", passport.authenticate("local"), (req, res) => {
+  if (req.body.remember) {
+    req.session.cookie.maxAge = 30 * 24 * 60 * 60 * 1000; // 30 days
+  } else {
+    req.session.cookie.expires = false;
+  }
+  res.redirect("/");
+});
+
+router.get("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      console.error(err);
+      return res.redirect("/");
+    }
+    res.clearCookie("connect.sid");
     res.redirect("/");
   });
 });

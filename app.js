@@ -1,9 +1,10 @@
 require("dotenv").config({ path: ".env.local" });
 const express = require("express");
 const methodOverride = require("method-override");
-const session = require("express-session");
 const passport = require("passport");
 const passportConfig = require("./modules/auth/passport");
+const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const app = express();
 let server;
 
@@ -11,13 +12,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
 app.use(
   session({
-    key: "connect.sid",
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    cookie: {
-      maxAge: 24 * 60 * 60 * 1000 * 1,
-    },
+    store: MongoStore.create({
+      mongoUrl: process.env.DB_URL,
+    }),
   })
 );
 app.use(passport.initialize());
@@ -46,10 +46,12 @@ mongoDB
   });
 
 function closeServer(signal) {
-  server.close(() =>
-    console.log(`Received ${signal} at ${new Date()}.\nClosing server.`)
-  );
-  mongoDB.close().then(() => console.log("Closed MongoDB connection."));
+  if (server) {
+    server.close(() =>
+      console.log(`Received ${signal} at ${new Date()}.\nClosing server.`)
+    );
+    mongoDB.close().then(() => console.log("Closed MongoDB connection."));
+  }
 }
 process.on("SIGTERM", closeServer);
 process.on("SIGINT", closeServer);

@@ -20,18 +20,20 @@
 
     <div class="jumbotron">
       <div class="container">
-        <h1 class="display-4">Welcome!</h1>
+        <h1 class="display-4">
+          <%=`Welcome${user ? ` back, ${user.id}` : ""}!` %>
+        </h1>
         <p class="lead">This is a simple to-do list management app.</p>
         <hr class="my-4" />
-        <% if(!user) {%>
+        <% if(user) {%>
+        <a class="btn btn-link" href="/api/logout" role="button">Logout</a>
+        <% } else {%>
         <p>Login and get started!</p>
         <a class="btn btn-outline-primary" href="/login" role="button">
           Login
         </a>
         <a class="btn btn-primary" href="/register" role="button">Register</a>
-        <%} else {%>
-        <p></p>
-        <% }%>
+        <%}%>
       </div>
     </div>
 

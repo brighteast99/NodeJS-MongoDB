@@ -6,3 +6,11 @@
 .list-group-item-placeholder:not(:only-child) * {
   display: none;
 }
+
+.expired {
+  color: #cc464d;
+  /* text-decoration: line-through; */
+}
+.expired::after {
+  content: "(Expired)";
+}
