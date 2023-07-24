@@ -112,7 +112,8 @@ router.delete("/tasks/:id", needLogin, async (req, res) => {
     let original = await MongoDB.findOne("task", { _id: _id });
     // Check if the task exists and if it belongs to the current user
     if (!original) return res.status(404).send();
-    if (original.owner != req.user._id) return res.status(403).send();
+    if (original.owner.toString() != req.user._id.toString())
+      return res.status(403).send();
 
     MongoDB.deleteOne("task", { _id: _id }).then((result) => res.send(result));
   } catch (err) {
