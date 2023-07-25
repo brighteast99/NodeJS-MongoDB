@@ -21,7 +21,9 @@
     <div class="jumbotron">
       <div class="container">
         <h1 class="display-4">
-          <%=`Welcome${user ? ` back, ${user.id}` : ""}!` %>
+          Welcome <% if(user) { %> back,
+          <a href="/my"><%= user.name ?? user.id %></a>
+          <% } %> !
         </h1>
         <p class="lead">This is a simple to-do list management app.</p>
         <hr class="my-4" />

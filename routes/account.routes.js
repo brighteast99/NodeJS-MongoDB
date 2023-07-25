@@ -1,4 +1,5 @@
 const express = require("express");
+const { needLogin } = require("../modules/auth");
 const router = express.Router();
 
 router.get("/", (req, res) => {
@@ -13,6 +14,10 @@ router.get("/login", (req, res) => {
 
 router.get("/register", (req, res) => {
   res.render("account_form.ejs", { registerMode: true });
+});
+
+router.get("/my", needLogin, (req, res) => {
+  res.render("myPage.ejs", { user: req.user });
 });
 
 module.exports = router;
