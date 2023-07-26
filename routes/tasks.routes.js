@@ -51,13 +51,29 @@ router.get("/:id", (req, res) => {
   try {
     let _id = new ObjectId(req.params.id);
 
-    MongoDB.findOne("task", { _id: _id }).then((task) => {
+    const pipeline = [
+      {
+        $match: {
+          _id: _id,
+        },
+      },
+      {
+        $lookup: {
+          from: "user",
+          localField: "participants",
+          foreignField: "_id",
+          as: "participants",
+        },
+      },
+    ];
+
+    MongoDB.aggregate("task", pipeline).then((task) => {
       // Check if the task exists and if it belongs to the current user
-      if (!task) res.status(404).send();
-      else if (task.owner != req.user._id.toString()) res.status(403).send();
+      if (!task.length) res.status(404).send();
+      else if (task[0].owner != req.user._id.toString()) res.status(403).send();
       else
         res.render("task.ejs", {
-          task: task,
+          task: task[0],
           formatDate: formatDate,
         });
     });
