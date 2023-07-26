@@ -13,10 +13,6 @@
       integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N"
       crossorigin="anonymous"
     />
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css"
-    />
     <title>Document</title>
   </head>
   <body>
@@ -35,26 +31,22 @@
           name="<%= registerMode ? 'register' : 'login' %>"
           method="POST"
         >
-          <div class="form-group">
-            <input
-              id="input-id"
-              class="form-control"
-              name="id"
-              placeholder="ID"
-              autofocus
-            />
-          </div>
-          <div class="form-group mb-2">
-            <input
-              id="input-pw"
-              class="form-control"
-              name="password"
-              type="password"
-              placeholder="PW"
-            />
-          </div>
+          <input
+            id="input-id"
+            class="form-control mb-3"
+            name="id"
+            placeholder="ID"
+            autofocus
+          />
+          <input
+            id="input-pw"
+            class="form-control mb-3"
+            name="password"
+            type="password"
+            placeholder="PW"
+          />
           <% if(!registerMode) {%>
-          <div class="form-group form-check">
+          <div class="form-check mb-4">
             <input
               id="input-remember"
               class="form-check-input"
@@ -67,14 +59,22 @@
             </label>
           </div>
           <%}%>
+
           <button
             id="button-submit"
             type="submit"
             class="btn btn-success btn-block mb-2"
           >
-            <%= registerMode ? 'Register' : 'Login'%>
+            <span
+              id="spinner"
+              class="spinner-border spinner-border-sm d-none"
+            ></span>
+            <span id="submit-lable">
+              <%= registerMode ? 'Register' : 'Login'%>
+            </span>
           </button>
         </form>
+
         <p class="text-muted">
           <% if(registerMode) {%> Already have an account?
           <a href="/login">Login</a>
@@ -90,9 +90,10 @@
       $("#form-account").submit((e) => {
         e.preventDefault();
 
-        const submitBtn = $("button#button-submit");
-        submitBtn.attr("disabled", true);
-        submitBtn.html("<i class='fa fa-spinner fa-spin'></i>");
+        const spinner = $("#spinner");
+        const submitLable = $("#submit-lable");
+        spinner.removeClass("d-none");
+        submitLable.addClass("d-none");
 
         const form = $(e.currentTarget);
         let registerMode = form.attr("name") === "register";
@@ -136,8 +137,8 @@
             }
           })
           .always(() => {
-            submitBtn.attr("disabled", false);
-            submitBtn.html(registerMode ? "Register" : "Login");
+            spinner.addClass("d-none");
+            submitLable.removeClass("d-none");
           });
       });
     </script>
