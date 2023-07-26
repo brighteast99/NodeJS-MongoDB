@@ -7,7 +7,7 @@ const { formatDate, formatInputDate } = require("../modules/utils/");
 router.get("/", (req, res) => {
   const keyword = req.query.search;
 
-  let condition = [
+  let pipeline = [
     {
       $match: {
         owner: req.user._id,
@@ -19,14 +19,14 @@ router.get("/", (req, res) => {
   ];
 
   if (keyword)
-    condition.unshift({
+    pipeline.unshift({
       $search: {
         index: "nameSearch",
         text: { query: keyword, path: "name" },
       },
     });
 
-  MongoDB.findAll("task", condition)
+  MongoDB.aggregate("task", pipeline)
     .then((tasks) => {
       res.render("list.ejs", {
         tasks: tasks,

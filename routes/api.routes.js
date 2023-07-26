@@ -96,13 +96,13 @@ router.get("/users", needLogin, (req, res) => {
 
   if (!name) res.json([]);
 
-  let condition = [
+  let pipeline = [
     { $match: { name: new RegExp(`^${name}`, "i") } },
     { $limit: 5 },
     { $project: { _id: 1, name: 1 } },
   ];
 
-  MongoDB.findAll("user", condition)
+  MongoDB.aggregate("user", pipeline)
     .then((result) => {
       return res.json(result);
     })

@@ -82,7 +82,7 @@ class MongoDB {
       try {
         this.db
           .collection(collection)
-          .aggregate(condition)
+          .find(condition)
           .toArray()
           .then((result) => {
             resolve(result);
@@ -131,6 +131,22 @@ class MongoDB {
           .deleteOne(condition)
           .then((result) => {
             resolve(result.deletedCount > 0);
+          });
+      } catch (err) {
+        reject(err);
+      }
+    });
+  }
+
+  aggregate(collection, pipeline) {
+    return new Promise((resolve, reject) => {
+      try {
+        this.db
+          .collection(collection)
+          .aggregate(pipeline)
+          .toArray()
+          .then((result) => {
+            resolve(result);
           });
       } catch (err) {
         reject(err);
