@@ -47,16 +47,31 @@ router.get("/new", (req, res) => {
   });
 });
 
-router.get("/:id/edit", (req, res) => {
-  let _id;
+router.get("/:id", (req, res) => {
   try {
-    _id = new ObjectId(req.params.id);
-  } catch (err) {
-    return res.status(400).send();
-  }
+    let _id = new ObjectId(req.params.id);
 
-  MongoDB.findOne("task", { _id: _id })
-    .then((task) => {
+    MongoDB.findOne("task", { _id: _id }).then((task) => {
+      // Check if the task exists and if it belongs to the current user
+      if (!task) res.status(404).send();
+      else if (task.owner != req.user._id.toString()) res.status(403).send();
+      else
+        res.render("task.ejs", {
+          task: task,
+          formatDate: formatDate,
+        });
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send();
+  }
+});
+
+router.get("/:id/edit", (req, res) => {
+  try {
+    let _id = new ObjectId(req.params.id);
+
+    MongoDB.findOne("task", { _id: _id }).then((task) => {
       // Check if the task exists and if it belongs to the current user
       if (!task) res.status(404).send();
       else if (task.owner != req.user._id.toString()) res.status(403).send();
@@ -66,8 +81,11 @@ router.get("/:id/edit", (req, res) => {
           task: task,
           formatInputDate: formatInputDate,
         });
-    })
-    .catch(() => res.status(500).send());
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send();
+  }
 });
 
 module.exports = router;

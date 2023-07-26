@@ -17,23 +17,19 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css"
     />
+    <link rel="stylesheet" href="/public/util.css" />
     <title>Document</title>
   </head>
   <body>
     <%- include("../components/TopNav.html") %>
 
     <div class="container py-5" style="max-width: 480px">
-      <form
-        id="form-newTask"
-        action="/api/tasks<%= createMode ? '' : `/${task._id}?_method=PATCH` %>"
-        method="POST"
-      >
+      <form id="form-task">
         <div class="form-group">
           <label for="input-task">Task</label>
           <input
-            id="input-task"
+            id="input-name"
             class="form-control"
-            name="taskName"
             required
             autofocus
             value="<%= createMode ? '' : task.name %>"
@@ -43,60 +39,204 @@
         <% let now = new Date() %>
         <div class="form-group">
           <label for="input-dueDate">Due by</label>
-          <div class="row">
-            <div class="col-6 pr-2">
-              <div class="input-group">
-                <input
-                  id="input-dueDate"
-                  class="form-control"
-                  name="taskDueDate"
-                  type="date"
-                  required
-                  value="<%= formatInputDate(createMode ? now : new Date(task.dueDate)) %>"
-                />
+          <div class="input-group">
+            <input
+              id="input-dueDate"
+              class="form-control col-6"
+              type="date"
+              required
+              value="<%= formatInputDate(createMode ? now : new Date(task.dueDate)) %>"
+            />
+            <input
+              id="input-dueHour"
+              class="form-control col-3"
+              placeholder="Hrs."
+              value="<%= (createMode ? now : new Date(task.dueDate)).getHours()  %>"
+              min="0"
+              max="23"
+              type="number"
+              required
+            />
+            <input
+              id="input-dueMinute"
+              class="form-control col-3"
+              placeholder="Min."
+              value="<%= (createMode ? now : new Date(task.dueDate)).getMinutes() %>"
+              min="0"
+              max="59"
+              type="number"
+              required
+            />
+          </div>
+        </div>
+
+        <div class="form-check mb-2">
+          <input
+            id="input-groupTask"
+            type="checkbox"
+            class="form-check-input"
+          />
+          <label
+            for="input-groupTask"
+            class="form-check-label user-select-none"
+          >
+            Group task
+          </label>
+        </div>
+        <div class="collapse" id="collapse">
+          <div class="card mb-3">
+            <div class="card-header py-2">Participants</div>
+
+            <div class="card-body p-2">
+              <div class="form-group position-relative">
+                <div class="input-group">
+                  <input
+                    type="text"
+                    id="input-user"
+                    form="#"
+                    class="form-control rounded-0"
+                    placeholder="User name"
+                    style="
+                      border: none;
+                      border-bottom: 1px solid lightgray;
+                      box-shadow: none;
+                    "
+                  />
+                  <div class="input-group-append">
+                    <div
+                      class="input-group-text rounded-0"
+                      style="
+                        border: none;
+                        border-bottom: 1px solid lightgray;
+                        background-color: inherit;
+                      "
+                    >
+                      <i class="fa fa-search"></i>
+                    </div>
+                  </div>
+                </div>
+                <ul
+                  id="list-user"
+                  class="list-group position-absolute w-100 shadow-sm"
+                  style="
+                    border-top-left-radius: 0;
+                    border-top-right-radius: 0;
+                    display: none;
+                    z-index: 1;
+                  "
+                >
+                  <li
+                    class="list-group-item list-group-item-placeholder text-center text-muted"
+                    style="border-top: none"
+                  >
+                    No results
+                  </li>
+                </ul>
               </div>
-            </div>
-            <div class="col-3 px-2">
-              <input
-                id="input-dueHour"
-                class="form-control"
-                placeholder="Hrs."
-                value="<%= (createMode ? now : new Date(task.dueDate)).getHours()  %>"
-                name="taskDueHour"
-                min="0"
-                max="23"
-                type="number"
-              />
-            </div>
-            <div class="col-3 pl-2">
-              <input
-                id="input-dueMinute"
-                class="form-control"
-                placeholder="Min."
-                value="<%= (createMode ? now : new Date(task.dueDate)).getMinutes() %>"
-                name="taskDueMinute"
-                min="0"
-                max="59"
-                type="number"
-              />
+              <ul id="list-participants" class="list-group list-group-flush">
+                <li
+                  class="list-group-item list-group-item-placeholder text-center text-muted"
+                  style="border-top: none"
+                >
+                  Add participants
+                </li>
+              </ul>
             </div>
           </div>
         </div>
 
-        <div class="form-group">
-          <button
-            id="button-submit"
-            type="submit"
-            class="btn btn-success btn-block"
-          >
-            <%= createMode ? "Add" : "Edit" %>
-          </button>
-        </div>
+        <hr />
+
+        <button
+          id="button-submit"
+          type="submit"
+          class="btn btn-success btn-block"
+        >
+          <span
+            id="spinner"
+            class="spinner-border spinner-border-sm d-none"
+          ></span>
+          <span id="submit-lable"> <%= createMode ? "Add" : "Edit" %> </span>
+        </button>
       </form>
+      <div
+        id="alert"
+        class="alert alert-success mt-3"
+        role="alert"
+        style="display: none"
+      ></div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
     <script>
+      const userSearch = $("#input-user");
+      const userList = $("#list-user");
+      const participantList = $("#list-participants");
+      let hideAction;
+      let selected;
+
+      let _participants = [];
+      let participants = new Proxy(_participants, {
+        set: (target, property, value, receiver) => {
+          const result = Reflect.set(target, property, value, receiver);
+
+          if (property === "length") {
+            participantList.children(":not(:first)").remove();
+            target.forEach((participant) => {
+              $("<li>", {
+                class: "list-group-item",
+                text: participant.name,
+              })
+                .append(
+                  $("<button>", {
+                    class: "close",
+                    text: "×",
+                  }).click(() => {
+                    if (confirm(`Remove ${participant.name} from group?`))
+                      participants.splice(participants.indexOf(participant), 1);
+                  })
+                )
+                .appendTo(participantList);
+            });
+          }
+
+          return result;
+        },
+      });
+      let _searchResult = [];
+      let searchResult = new Proxy(_searchResult, {
+        set: (target, property, value, receiver) => {
+          const result = Reflect.set(target, property, value, receiver);
+
+          if (property === "length") {
+            userList.children(":not(:first)").remove();
+            target.forEach((user) => {
+              $("<li>", {
+                class: `list-group-item list-group-item-action ${
+                  participants.some(
+                    (participant) => participant.id === user._id
+                  )
+                    ? "active"
+                    : ""
+                }`,
+                text: user.name,
+              })
+                .click((e) => {
+                  const target = $(e.currentTarget);
+                  const data = { id: user._id, name: user.name };
+                  if (target.hasClass("active"))
+                    participants.splice(participants.indexOf(data), 1);
+                  else participants.push(data);
+                  target.toggleClass("active");
+                })
+                .appendTo(userList);
+            });
+          }
+
+          return result;
+        },
+      });
+
       $("input[type='number']")
         .keypress((e) => {
           if (e.key == "Enter") return;
@@ -109,17 +249,162 @@
           if (target.val() < 0) target.val(0);
         });
 
-      const dueDateInput = $("input#input-dueDate");
-      if (!dueDateInput.attr("value")) dueDateInput.attr("value", parseNow());
+      $("#input-groupTask").change((e) => {
+        const collapse = $("#collapse");
 
-      function parseNow() {
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = (date.getMonth() + 1).toString().padStart(2, "0");
-        const day = date.getDay().toString().padStart(2, "0");
+        if (!collapse.hasClass("collapsing"))
+          collapse.collapse(e.currentTarget.checked ? "show" : "hide");
+        else
+          collapse
+            .off("hidden.bs.collapse shown.bs.collapse")
+            .one("hidden.bs.collapse shown.bs.collapse", () => {
+              collapse.collapse(e.currentTarget.checked ? "show" : "hide");
+            });
+      });
 
-        return `${year}-${month}-${day}`;
-      }
+      userSearch.on("focus click", () => {
+        userList.show();
+        userList
+          .children(":not(:first)")
+          .removeClass("list-group-item-primary")
+          .each((index, elem) => {
+            const target = $(elem);
+            if (
+              !participants.some(
+                (participant) => participant.name === target.text()
+              )
+            )
+              target.removeClass("active");
+          });
+      });
+      userSearch.on("blur", () => {
+        selected = null;
+        hideAction = setTimeout(() => userList.hide(), 50);
+      });
+      userList.mousedown((e) => {
+        e.preventDefault();
+        clearTimeout(hideAction);
+      });
+      userSearch.on("input", () => {
+        selected = null;
+        userList.show();
+
+        $.ajax({
+          method: "GET",
+          url: `/api/users?name=${userSearch.val()}`,
+        }).done((result) =>
+          searchResult.splice(0, searchResult.length, ...result)
+        );
+      });
+      userSearch.keydown((e) => {
+        if (e.key === "Escape") return userList.hide();
+        if (!searchResult.length) return;
+        switch (e.key) {
+          case "Enter":
+            e.stopPropagation();
+            e.preventDefault();
+            userList.children(`:nth-child(${selected + 2})`)?.trigger("click");
+            break;
+          case "ArrowUp":
+          case "ArrowDown":
+            e.preventDefault();
+            if (selected == null) selected = e.key === "ArrowUp" ? 0 : -1;
+            userList
+              .children(`:nth-child(${selected + 2})`)
+              .removeClass("list-group-item-primary");
+            selected =
+              (((e.key === "ArrowUp" ? selected - 1 : selected + 1) %
+                searchResult.length) +
+                searchResult.length) %
+              searchResult.length;
+            userList
+              .children(`:nth-child(${selected + 2})`)
+              .addClass("list-group-item-primary");
+            break;
+          default:
+            return;
+        }
+      });
+
+      $("form#form-task").submit((e) => {
+        e.preventDefault();
+
+        const submitBtn = $("#button-submit");
+        if (submitBtn.prop("disabled")) return;
+
+        const createMode = location.pathname.endsWith("new");
+        const id = location.pathname.match(/tasks\/(.*)\/edit/)?.[1];
+
+        const taskData = {
+          name: $("#input-name").val(),
+          dueDate: new Date(
+            `${$("#input-dueDate").val()} ${$("#input-dueHour")
+              .val()
+              .padStart(2, "0")}:${$("#input-dueMinute")
+              .val()
+              .padStart(2, "0")}`
+          ),
+        };
+        if ($("#input-groupTask").prop("checked"))
+          taskData.participants = participants;
+
+        if (taskData.participants?.length == 0)
+          return alert("Group task needs participant information.");
+
+        const spinner = $("#spinner");
+        const submitLable = $("#submit-lable");
+        submitBtn.prop("disabled", true);
+        spinner.removeClass("d-none");
+        submitLable.addClass("d-none");
+
+        $.ajax({
+          method: createMode ? "POST" : "PATCH",
+          url: `/api/tasks${createMode ? "" : `/${id}`}`,
+          data: taskData,
+        })
+          .done((response) => {
+            e.currentTarget.reset();
+            userSearch.val("");
+            searchResult.splice(0, searchResult.length);
+            participants.splice(0, participants.length);
+
+            if (createMode) {
+              const alert = $("#alert");
+              alert
+                .text(
+                  `A new task '${taskData.name}' is registered successfully!`
+                )
+                .show();
+              setTimeout(() => alert.fadeOut(250), 3000);
+            } else {
+              location.href = `/tasks/${id}`;
+            }
+          })
+          .fail((xhr) => {
+            const work = createMode ? "register" : "edit";
+            switch (xhr.status) {
+              case 400:
+                alert("Please fill out all fields.");
+                break;
+              case 401:
+                alert(`You need to login to ${work} task.`);
+                break;
+              case 403:
+                alert(`You can only ${work} your own tasks.`);
+                break;
+              case 500:
+                alert(
+                  `Failed to ${work}.\nPlease try again later or contact the administrator.`
+                );
+                break;
+            }
+          })
+          .always(() => {
+            submitBtn.prop("disabled", false);
+            spinner.addClass("d-none");
+            submitLable.removeClass("d-none");
+          });
+      });
     </script>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"

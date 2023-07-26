@@ -37,6 +37,7 @@ router.post("/register", (req, res) => {
 
       const newUser = {
         id: req.body.id,
+        name: req.body.id,
         password: req.body.password,
         salt: bcrypt.genSaltSync(SALT_ROUNDS),
       };
@@ -90,25 +91,43 @@ router.patch(
   }
 );
 
+router.get("/users", needLogin, (req, res) => {
+  const name = req.query.name;
+
+  if (!name) res.json([]);
+
+  let condition = [
+    { $match: { name: new RegExp(`^${name}`, "i") } },
+    { $limit: 5 },
+    { $project: { _id: 1, name: 1 } },
+  ];
+
+  MongoDB.findAll("user", condition)
+    .then((result) => {
+      return res.json(result);
+    })
+    .catch((err) => {
+      console.error(err);
+      return res.status(500).send();
+    });
+});
+
 router.post("/tasks", needLogin, (req, res) => {
-  if (
-    !req.body.taskName ||
-    !req.body.taskDueDate ||
-    !req.body.taskDueHour ||
-    !req.body.taskDueMinute
-  )
-    return res.status(400).send();
+  if (!req.body.name || !req.body.dueDate) return res.status(400).send();
 
   try {
     const newTask = {
       owner: req.user._id,
-      name: req.body.taskName,
-      dueDate: new Date(
-        `${req.body.taskDueDate} ${req.body.taskDueHour}:${req.body.taskDueMinute}`
-      ),
+      name: req.body.name,
+      dueDate: new Date(req.body.dueDate),
+      participants: [],
     };
+    if (req.body.participants)
+      req.body.participants.forEach((participant) => {
+        newTask.participants.push(new ObjectId(participant));
+      });
 
-    MongoDB.insertOne("task", newTask).then(() => res.redirect("/tasks/new"));
+    MongoDB.insertOne("task", newTask).then(() => res.status(201).send());
   } catch (err) {
     console.error(err);
     res.status(500).redirect("/tasks/new");
@@ -116,13 +135,7 @@ router.post("/tasks", needLogin, (req, res) => {
 });
 
 router.patch("/tasks/:id", needLogin, async (req, res) => {
-  if (
-    !req.body.taskName ||
-    !req.body.taskDueDate ||
-    !req.body.taskDueHour ||
-    !req.body.taskDueMinute
-  )
-    return res.status(400).send();
+  if (!req.body.name || !req.body.dueDate) return res.status(400).send();
 
   try {
     const _id = new ObjectId(req.params.id);
@@ -133,15 +146,19 @@ router.patch("/tasks/:id", needLogin, async (req, res) => {
     if (original.owner.toString() != req.user._id.toString())
       return res.status(403).send();
 
-    const toUpdate = {
-      name: req.body.taskName,
-      dueDate: new Date(
-        `${req.body.taskDueDate} ${req.body.taskDueHour}:${req.body.taskDueMinute}`
-      ),
+    const updateData = {
+      name: req.body.name,
+      dueDate: new Date(req.body.dueDate),
+      participants: [],
     };
 
-    MongoDB.updateOne("task", { _id: _id }, toUpdate).then(() =>
-      res.redirect("/tasks")
+    if (req.body.participants)
+      updateData.participants.push(
+        ...req.body.participants.map((participant) => new ObjectId(participant))
+      );
+
+    MongoDB.updateOne("task", { _id: _id }, updateData).then(() =>
+      res.status(200).send()
     );
   } catch (err) {
     console.error(err);
