@@ -94,7 +94,7 @@ router.patch(
 router.get("/users", needLogin, (req, res) => {
   const name = req.query.name;
 
-  if (!name) res.json([]);
+  if (!name) return res.json([]);
 
   let pipeline = [
     { $match: { name: new RegExp(`^${name}`, "i") } },
