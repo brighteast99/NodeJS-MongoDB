@@ -301,6 +301,7 @@
         if (!searchResult.length) return;
         switch (e.key) {
           case "Enter":
+          case " ":
             e.stopPropagation();
             e.preventDefault();
             userList.children(`:nth-child(${selected + 2})`)?.trigger("click");
