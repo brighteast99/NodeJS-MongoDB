@@ -102,6 +102,9 @@ router.get("/users", needLogin, (req, res) => {
     { $project: { _id: 1, name: 1 } },
   ];
 
+  if (req.query.excludeSelf === "true")
+    pipeline.push({ $match: { _id: { $ne: req.user._id } } });
+
   MongoDB.aggregate("user", pipeline)
     .then((result) => {
       return res.json(result);
