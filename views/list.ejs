@@ -1,133 +1,149 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
-      integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N"
-      crossorigin="anonymous"
-    />
-    <link rel="stylesheet" href="/public/util.css" />
-    <title>Document</title>
-  </head>
-  <body>
-    <%- include("../components/TopNav.html") %>
+	<head>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, shrink-to-fit=no"
+		/>
+		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+			integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N"
+			crossorigin="anonymous"
+		/>
+		<link rel="stylesheet" href="/public/util.css" />
+		<title>Document</title>
+	</head>
+	<body>
+		<%- include("../components/TopNav.html") %>
 
-    <div class="container p-3">
-      <% if(tasks.length || query) { %>
-      <form id="search" class="mb-2 mx-auto" style="max-width: 480px">
-        <div class="input-group">
-          <input class="form-control" value="<%= query %>" name="search" />
-          <button
-            type="submit"
-            class="input-group-append btn btn-success"
-            style="border-top-left-radius: 0; border-bottom-left-radius: 0"
-          >
-            Search
-          </button>
-        </div>
-      </form>
-      <% } %>
+		<div class="container p-3">
+			<% if(tasks.length || query) { %>
+			<form id="search" class="mb-2 mx-auto" style="max-width: 480px">
+				<div class="input-group">
+					<input class="form-control" value="<%= query %>" name="search" />
+					<button
+						type="submit"
+						class="input-group-append btn btn-success"
+						style="border-top-left-radius: 0; border-bottom-left-radius: 0"
+					>
+						Search
+					</button>
+				</div>
+			</form>
+			<% } %>
 
-      <ul class="list-group">
-        <li class="list-group-item text-center list-group-item-placeholder">
-          <% if(query) { %>
-          <p class="h5 font-weight-light py-3">
-            No result containing
-            <span class="font-weight-bold"> <%= query %> </span>
-          </p>
-          <% } else { %>
-          <p>No task has been registered yet.</p>
-          <% } %> <% if(!query) { %>
-          <a class="btn btn-success w-25" href="/tasks/new"> Add new task </a>
-          <% } else { %>
-          <button id="clear" class="btn btn-success w-25">Clear filter</button>
-          <% } %>
-        </li>
-        <% tasks.forEach(task => { %>
-        <li class="list-group-item">
-          <button
-            type="button"
-            class="close position-absolute"
-            style="right: 1rem; top: 1rem"
-            data-name="<%= task.name %>"
-            data-id="<%= task._id %>"
-          >
-            ×
-          </button>
-          <p class="h5"><%= task.name %></p>
-          <% let dueDate = new Date(task.dueDate) %>
-          <p class="<%= dueDate < new Date() ? 'expired' : 'text-muted' %>">
-            <%= formatDate(dueDate) %>
-          </p>
+			<ul class="list-group">
+				<li class="list-group-item text-center list-group-item-placeholder">
+					<% if(query) { %>
+					<p class="h5 font-weight-light py-3">
+						No result containing
+						<span class="font-weight-bold"> <%= query %> </span>
+					</p>
+					<% } else { %>
+					<p>No task has been registered yet.</p>
+					<% } %> <% if(!query) { %>
+					<a class="btn btn-success w-25" href="/tasks/new"> Add new task </a>
+					<% } else { %>
+					<button id="clear" class="btn btn-success w-25">Clear filter</button>
+					<% } %>
+				</li>
+				<% tasks.forEach(task => { %>
+				<li
+					class="list-group-item list-group-item-action"
+					data-id="<%= task._id %>"
+				>
+					<button
+						type="button"
+						class="close position-absolute"
+						style="right: 1rem; top: 1rem"
+						data-name="<%= task.name %>"
+						data-id="<%= task._id %>"
+					>
+						×
+					</button>
+					<p class="h5"><%= task.name %></p>
+					<% let dueDate = new Date(task.dueDate) %>
+					<p class="<%= dueDate < new Date() ? 'expired' : 'text-muted' %>">
+						<%= formatDate(dueDate) %>
+					</p>
 
-          <button
-            name="btn-edit"
-            class="btn btn-success"
-            data-id="<%= task._id %>"
-          >
-            Edit
-          </button>
-        </li>
-        <% }) %>
-      </ul>
-    </div>
+					<% if(task.participants.length > 0) { %> <% task.participants.sort((a,
+					b) => a.name.localeCompare(b.name)) %>
+					<p class="mb-0 text-muted">Participants:</p>
+					<% task.participants.forEach(participant => { %> <%-
+					include("../components/UserInfo", {user: participant}) %> <% }) %> <%
+					} %>
+					<button
+						name="btn-edit"
+						class="btn btn-success d-block"
+						data-id="<%= task._id %>"
+					>
+						Edit
+					</button>
+				</li>
+				<% }) %>
+			</ul>
+		</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
-    <script>
-      $("form#search").submit((e) => {
-        e.preventDefault();
+		<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+		<script>
+			$("form#search").submit((e) => {
+				e.preventDefault();
 
-        let url = "/tasks";
-        const keyword = $(e.currentTarget).serialize();
-        if (keyword) url += `?${keyword}`;
-        location.replace(url);
-      });
+				let url = "/tasks";
+				const keyword = $(e.currentTarget).serialize();
+				if (keyword) url += `?${keyword}`;
+				location.replace(url);
+			});
 
-      $("button#clear").click(() => location.replace("/tasks"));
+			$("button#clear").click(() => location.replace("/tasks"));
 
-      $("button[name='btn-edit']").click((e) => {
-        location.href = `/tasks/${e.currentTarget.dataset.id}/edit`;
-      });
-      $("button.close").click((e) => {
-        if (
-          confirm(
-            `Are you sure to delete task ${e.currentTarget.dataset.name}?`
-          )
-        )
-          $.ajax({
-            method: "DELETE",
-            url: `/api/tasks/${e.currentTarget.dataset.id}`,
-          })
-            .done((response) => {
-              if (response) {
-                const item = $(e.currentTarget).parent("li");
-                if (item.siblings().length == 1 && !location.search)
-                  $("form#search").remove();
-                item.remove();
-              } else
-                alert(
-                  "Failed to delete the task.\nThe task may not exist or may have already been deleted."
-                );
-            })
-            .fail(() =>
-              alert(
-                "Failed to delete the task.\nPlease try again later or contact the administrator."
-              )
-            );
-      });
-    </script>
+			$("button[name='btn-edit']").click((e) => {
+				e.stopPropagation();
+				location.href = `/tasks/${e.currentTarget.dataset.id}/edit`;
+			});
+			$("button.close").click((e) => {
+				e.stopPropagation();
 
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
-      crossorigin="anonymous"
-    ></script>
-  </body>
+				if (
+					confirm(
+						`Are you sure to delete task ${e.currentTarget.dataset.name}?`
+					)
+				)
+					$.ajax({
+						method: "DELETE",
+						url: `/api/tasks/${e.currentTarget.dataset.id}`,
+					})
+						.done((response) => {
+							if (response) {
+								const item = $(e.currentTarget).parent("li");
+								if (item.siblings().length == 1 && !location.search)
+									$("form#search").remove();
+								item.remove();
+							} else
+								alert(
+									"Failed to delete the task.\nThe task may not exist or may have already been deleted."
+								);
+						})
+						.fail(() =>
+							alert(
+								"Failed to delete the task.\nPlease try again later or contact the administrator."
+							)
+						);
+			});
+
+			$("li:not(:first-child)").click((e) => {
+				location.href = `/tasks/${e.currentTarget.dataset.id}`;
+			});
+		</script>
+
+		<script
+			src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+			integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
+			crossorigin="anonymous"
+		></script>
+	</body>
 </html>
