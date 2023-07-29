@@ -71,11 +71,8 @@
 				</div>
 
 				<div class="form-check mb-2">
-					<input
-						id="input-groupTask"
-						type="checkbox"
-						class="form-check-input"
-					/>
+					<input id="input-groupTask" type="checkbox" class="form-check-input"
+					<%= createMode ? '' : task.participants.length ? 'checked' : ''%> />
 					<label
 						for="input-groupTask"
 						class="form-check-label user-select-none"
@@ -83,7 +80,10 @@
 						Group task
 					</label>
 				</div>
-				<div class="collapse" id="collapse">
+				<div
+					class="<%= createMode ? 'collapse' : task.participants.length ? '' : 'collapse' %>"
+					id="collapse"
+				>
 					<div class="card mb-3">
 						<div class="card-header py-2">Participants</div>
 
@@ -133,7 +133,11 @@
 									</li>
 								</ul>
 							</div>
-							<ul id="list-participants" class="list-group list-group-flush">
+							<ul
+								id="list-participants"
+								class="list-group list-group-flush"
+								data-participants="<%= createMode ? '' : JSON.stringify(task.participants) %>"
+							>
 								<li
 									class="list-group-item list-group-item-placeholder text-center text-muted"
 									style="border-top: none"
@@ -214,7 +218,7 @@
 							$("<li>", {
 								class: `list-group-item list-group-item-action ${
 									participants.some(
-										(participant) => participant.id === user._id
+										(participant) => participant._id === user._id
 									)
 										? "active"
 										: ""
@@ -223,7 +227,7 @@
 							})
 								.click((e) => {
 									const target = $(e.currentTarget);
-									const data = { id: user._id, name: user.name };
+									const data = { _id: user._id, name: user.name };
 									if (target.hasClass("active"))
 										participants.splice(participants.indexOf(data), 1);
 									else participants.push(data);
@@ -236,6 +240,7 @@
 					return result;
 				},
 			});
+			participants.push(...(participantList.data("participants") || []));
 
 			$("input[type='number']")
 				.keypress((e) => {
@@ -347,7 +352,9 @@
 					),
 				};
 				if ($("#input-groupTask").prop("checked"))
-					taskData.participants = participants;
+					taskData.participants = participants.map(
+						(participant) => participant._id
+					);
 
 				if (taskData.participants?.length == 0)
 					return alert("Group task needs participant information.");
