@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const MongoDB = require("../modules/db");
+const MongoDB = require("../../modules/db");
 const ObjectId = require("mongodb").ObjectId;
-const { formatDate, formatInputDate } = require("../modules/utils/");
+const { formatDate, formatInputDate } = require("../../modules/utils/");
 
 router.get("/", (req, res) => {
 	const keyword = req.query.search;
