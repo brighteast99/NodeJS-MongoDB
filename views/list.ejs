@@ -74,16 +74,6 @@
 						</button>
 						<div class="dropdown-menu" onmousedown="event.stopPropagation()">
 							<a
-								name="btn-delete"
-								class="dropdown-item"
-								href="#"
-								role="button"
-								data-name="<%= task.name %>"
-								data-id="<%= task._id %>"
-							>
-								Delete
-							</a>
-							<a
 								name="btn-edit"
 								class="dropdown-item"
 								href="#"
@@ -91,6 +81,16 @@
 								data-id="<%= task._id %>"
 							>
 								Edit
+							</a>
+							<a
+								name="btn-delete"
+								class="dropdown-item text-danger"
+								href="#"
+								role="button"
+								data-name="<%= task.name %>"
+								data-id="<%= task._id %>"
+							>
+								Delete
 							</a>
 						</div>
 					</div>
