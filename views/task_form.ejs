@@ -81,7 +81,7 @@
 					</label>
 				</div>
 				<div
-					class="<%= createMode ? 'collapse' : task.participants.length ? '' : 'collapse' %>"
+					class="collapse <%= !createMode && task.participants.length ? 'show' : '' %>"
 					id="collapse"
 				>
 					<div class="card mb-3">
@@ -194,6 +194,7 @@
 								.append(
 									$("<button>", {
 										class: "close",
+										type: "button",
 										text: "×",
 									}).click(() => {
 										if (confirm(`Remove ${participant.name} from group?`))
@@ -257,9 +258,10 @@
 			$("#input-groupTask").change((e) => {
 				const collapse = $("#collapse");
 
-				if (!collapse.hasClass("collapsing"))
+				if (!collapse.hasClass("collapsing")) {
+					// collapse.collapse("hide");
 					collapse.collapse(e.currentTarget.checked ? "show" : "hide");
-				else
+				} else
 					collapse
 						.off("hidden.bs.collapse shown.bs.collapse")
 						.one("hidden.bs.collapse shown.bs.collapse", () => {
