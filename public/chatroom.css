@@ -26,6 +26,7 @@
 	margin-right: 5px;
 	aspect-ratio: 1;
 	align-self: flex-start;
+	border-radius: 50%;
 }
 .chat .name {
 	margin: 0 0 0 5px;

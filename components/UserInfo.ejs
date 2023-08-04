@@ -1,9 +1,10 @@
-<div class="p-2 d-inline-block" style="width: fit-content">
+<div class="p-1 d-inline-block" style="width: fit-content">
 	<div
-		class="rounded-circle d-inline-block"
-		style="width: 1.5em; aspect-ratio: 1"
+		class="d-inline-block"
+		style="width: 1.5em; aspect-ratio: 1; vertical-align: middle"
 	>
-		<img width="100%" src="<%= user.profileImage || "/public/profile.jpg" %>" />
+		<img width="100%" class="d-block rounded-circle" src="<%= user.profileImage
+		|| "/public/profile.jpg" %>" />
 	</div>
-	<span class="mb-0" style="align-self: center"><%= user.name %></span>
+	<span class="mb-0" style="vertical-align: middle"><%= user.name %></span>
 </div>
