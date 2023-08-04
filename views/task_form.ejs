@@ -385,8 +385,8 @@
 						if (createMode) {
 							const alert = $("#alert");
 							alert
-								.text(
-									`A new task '${taskData.name}' is registered successfully!`
+								.html(
+									`A new task <a href="/tasks/${response._id}">${taskData.name}</a> is registered successfully!`
 								)
 								.show();
 							setTimeout(() => alert.fadeOut(250), 3000);
