@@ -13,6 +13,10 @@
 			integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N"
 			crossorigin="anonymous"
 		/>
+		<link
+			rel="stylesheet"
+			href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.8.2/css/all.min.css"
+		/>
 		<link rel="stylesheet" href="/public/util.css" />
 		<title>Document</title>
 	</head>
@@ -55,15 +59,41 @@
 					class="list-group-item list-group-item-action"
 					data-id="<%= task._id %>"
 				>
-					<button
-						type="button"
-						class="close position-absolute"
-						style="right: 1rem; top: 1rem"
-						data-name="<%= task.name %>"
-						data-id="<%= task._id %>"
+					<div
+						class="btn-group dropright position-absolute"
+						style="right: 0.5rem; top: 0.5rem; font-size: 1.25em"
 					>
-						×
-					</button>
+						<button
+							type="button"
+							class="dropdown-toggle close px-2 py-1"
+							data-toggle="dropdown"
+							aria-expanded="false"
+							onmousedown="event.stopPropagation()"
+						>
+							<i class="fa fa-ellipsis-v fa-xs"></i>
+						</button>
+						<div class="dropdown-menu" onmousedown="event.stopPropagation()">
+							<a
+								name="btn-delete"
+								class="dropdown-item"
+								href="#"
+								role="button"
+								data-name="<%= task.name %>"
+								data-id="<%= task._id %>"
+							>
+								Delete
+							</a>
+							<a
+								name="btn-edit"
+								class="dropdown-item"
+								href="#"
+								role="button"
+								data-id="<%= task._id %>"
+							>
+								Edit
+							</a>
+						</div>
+					</div>
 					<p class="h5"><%= task.name %></p>
 					<% let dueDate = new Date(task.dueDate) %>
 					<p class="<%= dueDate < new Date() ? 'expired' : 'text-muted' %>">
@@ -76,13 +106,6 @@
 					<% task.participants.forEach(participant => { %> <%-
 					include("../components/UserInfo", {user: participant}) %> <% }) %> <%
 					} %>
-					<button
-						name="btn-edit"
-						class="btn btn-success d-block"
-						data-id="<%= task._id %>"
-					>
-						Edit
-					</button>
 				</li>
 				<% }) %>
 			</ul>
@@ -101,11 +124,11 @@
 
 			$("button#clear").click(() => location.replace("/tasks"));
 
-			$("button[name='btn-edit']").click((e) => {
+			$("a[name='btn-edit']").click((e) => {
 				e.stopPropagation();
 				location.href = `/tasks/${e.currentTarget.dataset.id}/edit`;
 			});
-			$("button.close").click((e) => {
+			$("a[name='btn-delete']").click((e) => {
 				e.stopPropagation();
 
 				if (
@@ -119,7 +142,7 @@
 					})
 						.done((response) => {
 							if (response) {
-								const item = $(e.currentTarget).parent("li");
+								const item = $(e.currentTarget).closest("li");
 								if (item.siblings().length == 1 && !location.search)
 									$("form#search").remove();
 								item.remove();
@@ -135,9 +158,9 @@
 						);
 			});
 
-			$("li:not(:first-child)").click((e) => {
-				location.href = `/tasks/${e.currentTarget.dataset.id}`;
-			});
+			$("li.list-group-item:not(:first-child)").mousedown(
+				(e) => (location.href = `/tasks/${e.currentTarget.dataset.id}`)
+			);
 		</script>
 
 		<script

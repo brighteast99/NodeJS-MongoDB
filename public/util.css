@@ -1,15 +1,19 @@
 .list-group-item-placeholder:not(:only-child) {
-  display: none;
+	display: none;
 }
 .list-group-item-placeholder + .list-group-item {
-  border-top-left-radius: inherit;
-  border-top-right-radius: inherit;
-  border-top-width: 1px;
+	border-top-left-radius: inherit;
+	border-top-right-radius: inherit;
+	border-top-width: 1px;
 }
 .expired {
-  color: #cc464d;
-  /* text-decoration: line-through; */
+	color: #cc464d;
+	/* text-decoration: line-through; */
 }
 .expired::after {
-  content: "(Expired)";
+	content: "(Expired)";
+}
+
+.dropright > .dropdown-toggle::after {
+	content: none;
 }
