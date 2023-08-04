@@ -263,7 +263,9 @@
 					newChat = $(myChat.html());
 				} else {
 					newChat = $(othersChat.html());
-					newChat.find(".profile").attr("src", chat.writer.profileImage);
+					newChat
+						.find(".profile")
+						.attr("src", chat.writer.profileImage || "/public/profile.jpg");
 					newChat.find(".name").text(chat.writer.name);
 				}
 
