@@ -48,7 +48,7 @@ router.patch("/:id", upload.single("profileImage"), async (req, res) => {
 				process.env.MULTER_DIR
 			}/${req.file.filename}`;
 
-		MongoDB.updateOne("user", { _id: _id }, toUpdate).then(() => {
+		MongoDB.updateOne("user", { $set: { _id: _id } }, toUpdate).then(() => {
 			if (original.profileImage && req.file)
 				fs.unlink(
 					`${process.env.MULTER_DIR}/${original.profileImage.substring(

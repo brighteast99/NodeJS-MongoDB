@@ -1,4 +1,8 @@
-.list-group-item-placeholder:not(:only-child) {
+.list-group-item-placeholder {
+	text-align: center;
+	color: gray;
+}
+.list-group-item-placeholder:not(:only-of-type) {
 	display: none;
 }
 .list-group-item-placeholder + .list-group-item {

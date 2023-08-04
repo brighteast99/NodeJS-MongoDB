@@ -12,5 +12,3 @@ router.all("*", (req, res) => {
 });
 
 module.exports = router;
-
-("라우트 분리중");

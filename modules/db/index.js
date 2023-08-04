@@ -134,7 +134,7 @@ class MongoDB {
 			try {
 				this.db
 					.collection(collection)
-					.updateOne(condition, { $set: data }, this.options)
+					.updateOne(condition, data, this.options)
 					.then((result) => {
 						resolve(result.modifiedCount > 0);
 					});

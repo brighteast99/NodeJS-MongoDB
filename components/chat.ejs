@@ -1,0 +1,17 @@
+<% if(chat.writer._id !== user._id) { %>
+<div class="chat">
+	<img class="profile" src="<%= chat.writer.profileImage %>" />
+	<div class="content">
+		<p class="name"><%= chat.writer.name %></p>
+		<div class="d-flex align-items-end">
+			<span class="chat-box"><%= chat.message %></span>
+			<span class="timestamp"><%= chat.dateCreated %>></span>
+		</div>
+	</div>
+</div>
+<% } else { %>
+<div class="chat mine">
+	<span class="chat-box"><%= chat.message %></span>
+	<span class="timestamp"><%= chat.dateCreated %></span>
+</div>
+<% } %>

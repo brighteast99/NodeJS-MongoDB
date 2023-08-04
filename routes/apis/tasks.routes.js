@@ -12,13 +12,16 @@ router.post("/", (req, res) => {
 			name: req.body.name,
 			dueDate: new Date(req.body.dueDate),
 			participants: [],
+			chatRoom: null,
 		};
 		if (req.body.participants)
 			req.body.participants.forEach((participant) => {
 				newTask.participants.push(new ObjectId(participant));
 			});
 
-		MongoDB.insertOne("task", newTask).then(() => res.status(201).send());
+		MongoDB.insertOne("task", newTask).then((result) =>
+			res.status(201).json({ _id: result.insertedId })
+		);
 	} catch (err) {
 		console.error(err);
 		res.status(500).redirect("/tasks/new");
@@ -33,7 +36,7 @@ router.patch("/:id", async (req, res) => {
 
 		let original = await MongoDB.findOne("task", { _id: _id });
 		// Check if the task exists and if it belongs to the current user
-		if (!original) return res.status(404).send();
+		if (!original) return res.redirect("/404");
 		if (original.owner.toString() != req.user._id.toString())
 			return res.status(403).send();
 
@@ -48,12 +51,39 @@ router.patch("/:id", async (req, res) => {
 				...req.body.participants.map((participant) => new ObjectId(participant))
 			);
 
-		MongoDB.updateOne("task", { _id: _id }, updateData).then(() =>
-			res.status(200).send()
-		);
+		MongoDB.startTransaction();
+
+		await MongoDB.updateOne("task", { $set: { _id: _id } }, updateData);
+		if (original.chatRoom) {
+			if (updateData.participants.length)
+				await MongoDB.updateOne(
+					"chatRooms",
+					{ _id: original.chatRoom },
+					{
+						$set: {
+							participants: [
+								new ObjectId(req.user._id),
+								...updateData.participants,
+							],
+						},
+					}
+				);
+			else {
+				await MongoDB.deleteOne("chatRooms", {
+					_id: original.chatRoom,
+				});
+				await MongoDB.deleteMany("chats", {
+					chatAt: original.chatRoom,
+				});
+			}
+		}
+
+		await MongoDB.commitTransaction();
+		res.status(200).send();
 	} catch (err) {
 		console.error(err);
-		return res.status(500).send();
+		MongoDB.abortTransaction();
+		res.status(500).send();
 	}
 });
 
@@ -63,12 +93,25 @@ router.delete("/:id", async (req, res) => {
 
 		let original = await MongoDB.findOne("task", { _id: _id });
 		// Check if the task exists and if it belongs to the current user
-		if (!original) return res.status(404).send();
+		if (!original) return res.redirect("/404");
 		if (original.owner.toString() != req.user._id.toString())
 			return res.status(403).send();
 
-		MongoDB.deleteOne("task", { _id: _id }).then((result) => res.send(result));
+		MongoDB.startTransaction();
+		let result = await MongoDB.deleteOne("task", { _id: _id });
+		if (original.chatRoom) {
+			await MongoDB.deleteOne("chatRooms", {
+				_id: original.chatRoom,
+			});
+			await MongoDB.deleteMany("chats", {
+				chatAt: original.chatRoom,
+			});
+		}
+		await MongoDB.commitTransaction();
+		res.send(result);
 	} catch (err) {
+		console.error(err);
+		MongoDB.abortTransaction();
 		return res.status(500).send();
 	}
 });

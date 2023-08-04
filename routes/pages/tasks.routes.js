@@ -10,8 +10,19 @@ router.get("/", (req, res) => {
 	let pipeline = [
 		{
 			$match: {
-				owner: req.user._id,
+				$or: [{ owner: req.user._id }, { participants: req.user._id }],
 			},
+		},
+		{
+			$lookup: {
+				from: "user",
+				localField: "owner",
+				foreignField: "_id",
+				as: "owner",
+			},
+		},
+		{
+			$unwind: "$owner",
 		},
 		{
 			$lookup: {
@@ -37,6 +48,7 @@ router.get("/", (req, res) => {
 	MongoDB.aggregate("task", pipeline)
 		.then((tasks) => {
 			res.render("list.ejs", {
+				user: { _id: req.user._id },
 				tasks: tasks,
 				query: keyword,
 				formatDate: formatDate,
@@ -68,6 +80,17 @@ router.get("/:id", (req, res) => {
 			{
 				$lookup: {
 					from: "user",
+					localField: "owner",
+					foreignField: "_id",
+					as: "owner",
+				},
+			},
+			{
+				$unwind: "$owner",
+			},
+			{
+				$lookup: {
+					from: "user",
 					localField: "participants",
 					foreignField: "_id",
 					as: "participants",
@@ -77,11 +100,18 @@ router.get("/:id", (req, res) => {
 
 		MongoDB.aggregate("task", pipeline).then((tasks) => {
 			// Check if the task exists and if it belongs to the current user
-			if (!tasks.length) res.status(404).send();
-			else if (tasks[0].owner != req.user._id.toString())
+			if (!tasks.length) res.redirect("/404");
+			else if (
+				tasks[0].owner._id != req.user._id.toString() &&
+				!tasks[0].participants.some(
+					(participant) =>
+						participant._id.toString() === req.user._id.toString()
+				)
+			)
 				res.status(403).send();
 			else
 				res.render("task.ejs", {
+					user: { _id: req.user._id },
 					task: tasks[0],
 					formatDate: formatDate,
 				});
@@ -119,7 +149,7 @@ router.get("/:id/edit", (req, res) => {
 
 		MongoDB.aggregate("task", pipeline).then((tasks) => {
 			// Check if the task exists and if it belongs to the current user
-			if (!tasks.length) res.status(404).send();
+			if (!tasks.length) res.redirect("/404");
 			else if (tasks[0].owner != req.user._id.toString())
 				res.status(403).send();
 			else

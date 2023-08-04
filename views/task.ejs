@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, shrink-to-fit=no"
+		/>
+		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+			integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N"
+			crossorigin="anonymous"
+		/>
+		<link rel="stylesheet" href="../public/util.css" />
+		<link rel="stylesheet" href="../public/chatroom.css" />
+		<title>Document</title>
+	</head>
+	<body
+		data-user="<%= JSON.stringify(user)%>"
+		data-task="<%= JSON.stringify(task) %>"
+	>
+		<%- include("../components/TopNav.html") %>
+
+		<div class="container p-3">
+			<div class="card mb-3">
+				<div class="card-body">
+					<span class="h5"> <%= task.name %> </span>
+					<% if(task.owner._id.toString() !== user._id.toString()) { %>
+					<span class="text-info" style="font-size: 0.8rem"> (Invited by </span>
+					<%- include("../components/UserInfo", {user: task.owner}) %>
+					<span class="text-info" style="font-size: 0.8rem"> ) </span>
+					<% } %> <% let dueDate = new Date(task.dueDate) %>
+					<p class="<%= dueDate < new Date() ? 'expired' : 'text-muted' %>">
+						<%= formatDate(dueDate) %>
+					</p>
+					<% if(task.participants.length > 0) { %> <% task.participants.sort((a,
+					b) => a.name.localeCompare(b.name)) %>
+					<p class="mb-0 text-muted">Participants:</p>
+					<% task.participants.forEach(participant => { %> <%-
+					include("../components/UserInfo", {user: participant}) %> <% }) %> <%
+					} %>
+				</div>
+				<div class="card-footer p-0 d-flex">
+					<% if (user._id.toString() === task.owner._id.toString()) { %>
+					<button
+						id="btn-edit"
+						class="btn btn-success w-50 rounded-0"
+						style="border-bottom-left-radius: inherit !important"
+					>
+						Edit
+					</button>
+					<button
+						id="btn-delete"
+						class="btn btn-danger w-50 rounded-0"
+						style="border-bottom-right-radius: inherit !important"
+					>
+						Delete
+					</button>
+					<% } %>
+				</div>
+			</div>
+
+			<% if(task.chatRoom) { %>
+			<div class="card">
+				<div class="card-header">Chat room</div>
+				<div id="chat-room-spinner" class="card-body text-center">
+					<span class="spinner-border"></span>
+				</div>
+				<ul
+					id="chat-room-content"
+					class="list-group chat-content rounded-0"
+					style="display: none"
+				>
+					<li class="list-group-item-placeholder">
+						A new chat has been started.<br />
+						Say hello to everyone!
+					</li>
+					<template id="chat">
+						<li>
+							<div class="chat">
+								<img class="profile" />
+								<div class="content">
+									<p class="name"></p>
+									<div class="d-flex align-items-end">
+										<span class="chat-box"></span>
+										<span class="timestamp"></span>
+									</div>
+								</div>
+							</div>
+						</li>
+					</template>
+					<template id="chat-mine">
+						<li>
+							<div class="chat mine">
+								<span class="chat-box"></span>
+								<span class="timestamp"></span>
+							</div>
+						</li>
+					</template>
+				</ul>
+				<div class="input-group" style="height: 100px">
+					<textarea
+						id="input-chat"
+						class="form-control border-0 h-100"
+						placeholder="Type a message..."
+						style="border-top-left-radius: 0; resize: none"
+					></textarea>
+					<button
+						id="btn-send"
+						class="btn btn-success"
+						disabled
+						style="
+							border-radius: 0;
+							border-bottom-right-radius: 4px;
+							min-width: 75px;
+						"
+					>
+						<span
+							id="send-loading"
+							class="spinner-border spinner-border-sm"
+							style="display: none"
+						></span>
+						<span id="send-lable"> Send </span>
+					</button>
+				</div>
+			</div>
+			<% } else if(task.participants.length) { %>
+			<div class="card">
+				<div class="card-body text-center">
+					<% if(user._id.toString() === task.owner._id.toString()) { %>
+					<p>You can start chatting with participants now!</p>
+
+					<button id="btn-startChatting" class="btn btn-success">
+						Start chatting
+					</button>
+					<% } else {%>
+					<p class="text-muted mb-0">
+						Only the owner of the task can start chatting.
+					</p>
+					<% } %>
+				</div>
+			</div>
+			<% } %>
+		</div>
+
+		<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+		<script>
+			const task = $("body").data("task");
+			const user = $("body").data("user");
+			const chatRoomSpinner = $("#chat-room-spinner");
+			const chatRoomContent = $("#chat-room-content");
+			const chatInput = $("#input-chat");
+			const sendBtn = $("#btn-send");
+			const othersChat = $("#chat");
+			const myChat = $("#chat-mine");
+
+			if (task.chatRoom) {
+				$.ajax({
+					url: `/api/chat-rooms/${task.chatRoom}`,
+					method: "GET",
+				})
+					.done((result) => result.chats.forEach((chat) => createChat(chat)))
+					.always(() => {
+						chatRoomSpinner.hide();
+						chatRoomContent.show();
+						chatRoomContent.scrollTop(chatRoomContent[0].scrollHeight);
+					});
+			}
+
+			$("button#btn-edit").click((e) => {
+				location.href = `/tasks/${task._id}/edit`;
+			});
+			$("button#btn-delete").click((e) => {
+				if (confirm(`Are you sure to delete task ${task.name}?`))
+					$.ajax({
+						method: "DELETE",
+						url: `/api/tasks/${task._id}`,
+					})
+						.done((response) => {
+							if (response) {
+								alert(`Task ${task.name} has been deleted.`);
+								location.href = "/tasks";
+							} else
+								alert(
+									"Failed to delete the task.\nThe task may not exist or may have already been deleted."
+								);
+						})
+						.fail(() =>
+							alert(
+								"Failed to delete the task.\nPlease try again later or contact the administrator."
+							)
+						);
+			});
+			$("button#btn-startChatting").click((e) => {
+				$.ajax({
+					url: "/api/chat-rooms/",
+					method: "POST",
+					data: {
+						taskId: task._id,
+					},
+				})
+					.done((response) => {
+						location.reload(true);
+					})
+					.fail(() =>
+						alert(
+							"Failed to start chatting.\nPlease try again later or contact the administrator."
+						)
+					);
+			});
+			chatInput.on("input", (e) => {
+				const sendBtn = $("#btn-send");
+				if ($(e.currentTarget).val()) sendBtn.prop("disabled", false);
+				else sendBtn.prop("disabled", true);
+			});
+			chatInput.keypress((e) => {
+				if (!e.shiftKey && e.key === "Enter") {
+					e.preventDefault();
+					sendBtn.trigger("click");
+				}
+			});
+			sendBtn.click((e) => {
+				if (sendBtn.prop("disabled")) return;
+
+				const spinner = $("#send-loading");
+				const lable = $("#send-lable");
+
+				spinner.show();
+				lable.hide();
+				sendBtn.prop("disabled", true);
+
+				$.ajax({
+					method: "POST",
+					url: `/api/chats`,
+					data: {
+						chatRoomId: task.chatRoom,
+						message: chatInput.val(),
+					},
+				})
+					.done(() => {
+						chatInput.val(null);
+					})
+					.catch(() => {
+						alert(
+							"Failed to send message.\nPlease try again later or contact the administrator."
+						);
+					})
+					.always(() => {
+						spinner.hide();
+						lable.show();
+						if (chatInput.val()) sendBtn.prop("disabled", false);
+					});
+			});
+
+			function createChat(chat) {
+				let mine = chat.writer._id === user._id;
+				let newChat;
+
+				console.log(chat);
+				if (mine) {
+					newChat = $(myChat.html());
+				} else {
+					newChat = $(othersChat.html());
+					newChat.find(".profile").attr("src", chat.writer.profileImage);
+					newChat.find(".name").text(chat.writer.name);
+				}
+
+				newChat.find("span.chat-box").text(chat.message);
+				newChat
+					.find("span.timestamp")
+					.text(new Date(chat.dateCreated).toLocaleDateString());
+				newChat.appendTo(chatRoomContent);
+			}
+		</script>
+		<script
+			src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+			integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
+			crossorigin="anonymous"
+		></script>
+	</body>
+</html>

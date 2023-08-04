@@ -59,6 +59,7 @@
 					class="list-group-item list-group-item-action"
 					data-id="<%= task._id %>"
 				>
+					<% if(user._id.toString() === task.owner._id.toString()) { %>
 					<div
 						class="btn-group dropright position-absolute"
 						style="right: 0.5rem; top: 0.5rem; font-size: 1.25em"
@@ -94,8 +95,13 @@
 							</a>
 						</div>
 					</div>
-					<p class="h5"><%= task.name %></p>
-					<% let dueDate = new Date(task.dueDate) %>
+					<% } %>
+					<span class="h5"> <%= task.name %> </span>
+					<% if(task.owner._id.toString() !== user._id.toString()) { %>
+					<span class="text-info" style="font-size: 0.8rem"> (Invited by </span>
+					<%- include("../components/UserInfo", {user: task.owner}) %>
+					<span class="text-info" style="font-size: 0.8rem"> ) </span>
+					<% } %> <% let dueDate = new Date(task.dueDate) %>
 					<p class="<%= dueDate < new Date() ? 'expired' : 'text-muted' %>">
 						<%= formatDate(dueDate) %>
 					</p>

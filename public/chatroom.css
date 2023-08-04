@@ -1,0 +1,85 @@
+.chat-content {
+	min-height: 300px;
+	max-height: 500px;
+	overflow-y: scroll;
+	padding: 10px;
+}
+.chat-content li {
+	margin-top: 10px;
+	list-style: none;
+}
+.chat {
+	display: flex;
+	align-items: flex-end;
+}
+.chat:not(.mine) {
+	justify-content: left;
+}
+.chat.mine {
+	justify-content: right;
+}
+
+.chat .profile {
+	display: block;
+	width: 45px;
+	height: 45px;
+	margin-right: 5px;
+	aspect-ratio: 1;
+	align-self: flex-start;
+}
+.chat .name {
+	margin: 0 0 0 5px;
+}
+.chat .content {
+	order: 2;
+	width: 100%;
+}
+
+.chat-box {
+	padding: 10px;
+	max-width: 60%;
+	border-radius: 5px;
+	position: relative;
+}
+.chat:not(.mine) .chat-box {
+	justify-self: left;
+	background: #eee;
+	margin-left: 15px;
+}
+.chat.mine .chat-box {
+	justify-self: right;
+	background: #b2ffb1;
+	margin-right: 15px;
+	order: 2;
+}
+.chat-box::after {
+	content: "";
+	position: absolute;
+	top: 5px;
+	border-bottom: 0px solid transparent;
+}
+.chat:not(.mine) .chat-box::after {
+	border-top: 10px solid #eee;
+	border-left: 10px solid transparent;
+	border-right: 0px solid transparent;
+	left: -10px;
+}
+.chat.mine .chat-box::after {
+	border-top: 10px solid #b2ffb1;
+	border-left: 0px solid transparent;
+	border-right: 10px solid transparent;
+	right: -10px;
+}
+.chat-box + .timestamp {
+	display: inline-block;
+	vertical-align: text-bottom;
+	color: gray;
+	font-size: 0.8rem;
+}
+.chat:not(.mine) .chat-box + .timestamp {
+	margin-left: 0.5rem;
+}
+.chat.mine .chat-box + .timestamp {
+	order: 1;
+	margin-right: 0.5rem;
+}
