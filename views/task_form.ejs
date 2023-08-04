@@ -241,7 +241,11 @@
 					return result;
 				},
 			});
-			participants.push(...(participantList.data("participants") || []));
+			participants.push(
+				...(participantList.data("participants") || []).toSorted((a, b) =>
+					a.name.localeCompare(b.name)
+				)
+			);
 
 			$("input[type='number']")
 				.keypress((e) => {
@@ -258,10 +262,9 @@
 			$("#input-groupTask").change((e) => {
 				const collapse = $("#collapse");
 
-				if (!collapse.hasClass("collapsing")) {
-					// collapse.collapse("hide");
+				if (!collapse.hasClass("collapsing"))
 					collapse.collapse(e.currentTarget.checked ? "show" : "hide");
-				} else
+				else
 					collapse
 						.off("hidden.bs.collapse shown.bs.collapse")
 						.one("hidden.bs.collapse shown.bs.collapse", () => {
@@ -374,6 +377,7 @@
 				})
 					.done((response) => {
 						e.currentTarget.reset();
+						$("#collapse").collapse("hide");
 						userSearch.val("");
 						searchResult.splice(0, searchResult.length);
 						participants.splice(0, participants.length);
