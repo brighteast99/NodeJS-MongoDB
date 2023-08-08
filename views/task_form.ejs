@@ -391,7 +391,7 @@
 								.show();
 							setTimeout(() => alert.fadeOut(250), 3000);
 						} else {
-							location.href = `/tasks/${id}`;
+							location.replace(`/tasks/${id}`);
 						}
 					})
 					.fail((xhr) => {
