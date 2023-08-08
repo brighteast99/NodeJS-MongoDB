@@ -67,7 +67,7 @@ router.get("/new", (req, res) => {
 	});
 });
 
-router.get("/:id", (req, res) => {
+router.get("/:id", async (req, res) => {
 	try {
 		let _id = new ObjectId(req.params.id);
 
@@ -98,31 +98,29 @@ router.get("/:id", (req, res) => {
 			},
 		];
 
-		MongoDB.aggregate("task", pipeline).then((tasks) => {
-			// Check if the task exists and if it belongs to the current user
-			if (!tasks.length) res.redirect("/404");
-			else if (
-				tasks[0].owner._id != req.user._id.toString() &&
-				!tasks[0].participants.some(
-					(participant) =>
-						participant._id.toString() === req.user._id.toString()
-				)
+		const tasks = await MongoDB.aggregate("task", pipeline);
+		// Check if the task exists and if it belongs to the current user
+		if (!tasks.length) res.redirect("/404");
+		else if (
+			tasks[0].owner._id != req.user._id.toString() &&
+			!tasks[0].participants.some(
+				(participant) => participant._id.toString() === req.user._id.toString()
 			)
-				res.status(403).send();
-			else
-				res.render("task.ejs", {
-					user: { _id: req.user._id },
-					task: tasks[0],
-					formatDate: formatDate,
-				});
-		});
+		)
+			res.status(403).send();
+		else
+			res.render("task.ejs", {
+				user: { _id: req.user._id },
+				task: tasks[0],
+				formatDate: formatDate,
+			});
 	} catch (err) {
 		console.error(err);
 		return res.status(500).send();
 	}
 });
 
-router.get("/:id/edit", (req, res) => {
+router.get("/:id/edit", async (req, res) => {
 	try {
 		let _id = new ObjectId(req.params.id);
 
@@ -147,18 +145,16 @@ router.get("/:id/edit", (req, res) => {
 			},
 		];
 
-		MongoDB.aggregate("task", pipeline).then((tasks) => {
-			// Check if the task exists and if it belongs to the current user
-			if (!tasks.length) res.redirect("/404");
-			else if (tasks[0].owner != req.user._id.toString())
-				res.status(403).send();
-			else
-				res.render("task_form.ejs", {
-					createMode: false,
-					task: tasks[0],
-					formatInputDate: formatInputDate,
-				});
-		});
+		const tasks = await MongoDB.aggregate("task", pipeline);
+		// Check if the task exists and if it belongs to the current user
+		if (!tasks.length) res.redirect("/404");
+		else if (tasks[0].owner != req.user._id.toString()) res.status(403).send();
+		else
+			res.render("task_form.ejs", {
+				createMode: false,
+				task: tasks[0],
+				formatInputDate: formatInputDate,
+			});
 	} catch (err) {
 		console.error(err);
 		res.status(500).send();

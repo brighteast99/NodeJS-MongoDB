@@ -3,7 +3,7 @@ const router = express.Router();
 const MongoDB = require("../../modules/db");
 const ObjectId = require("mongodb").ObjectId;
 
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
 	if (!req.body.name || !req.body.dueDate) return res.status(400).send();
 
 	try {
@@ -19,9 +19,8 @@ router.post("/", (req, res) => {
 				newTask.participants.push(new ObjectId(participant));
 			});
 
-		MongoDB.insertOne("task", newTask).then((result) =>
-			res.status(201).json({ _id: result.insertedId })
-		);
+		const { insertedId } = await MongoDB.insertOne("task", newTask);
+		res.status(201).json({ _id: insertedId });
 	} catch (err) {
 		console.error(err);
 		res.status(500).redirect("/tasks/new");

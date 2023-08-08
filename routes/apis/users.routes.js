@@ -48,18 +48,21 @@ router.patch("/:id", upload.single("profileImage"), async (req, res) => {
 				process.env.MULTER_DIR
 			}/${req.file.filename}`;
 
-		MongoDB.updateOne("user", { _id: _id }, { $set: toUpdate }).then(() => {
-			if (original.profileImage && req.file)
-				fs.unlink(
-					`${process.env.MULTER_DIR}/${original.profileImage.substring(
-						original.profileImage.lastIndexOf("/")
-					)}`,
-					() => {}
-				);
-			return res.redirect("/my");
-		});
+		MongoDB.startTransaction();
+		await MongoDB.updateOne("user", { _id: _id }, { $set: toUpdate });
+		if (original.profileImage && req.file) {
+			fs.unlink(
+				`${process.env.MULTER_DIR}/${original.profileImage.substring(
+					original.profileImage.lastIndexOf("/")
+				)}`,
+				() => {}
+			);
+		}
+		await MongoDB.commitTransaction();
+		return res.redirect("/my");
 	} catch (err) {
 		console.error(err);
+		MongoDB.abortTransaction();
 		if (req.file)
 			fs.unlink(`${process.env.MULTER_DIR}/${req.file.filename}`, () => {});
 
