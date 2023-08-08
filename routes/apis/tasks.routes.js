@@ -53,7 +53,7 @@ router.patch("/:id", async (req, res) => {
 
 		MongoDB.startTransaction();
 
-		await MongoDB.updateOne("task", { $set: { _id: _id } }, updateData);
+		await MongoDB.updateOne("task", { _id: _id }, { $set: updateData });
 		if (original.chatRoom) {
 			if (updateData.participants.length)
 				await MongoDB.updateOne(
