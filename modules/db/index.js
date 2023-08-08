@@ -60,12 +60,17 @@ class MongoDB {
 		this.options = {};
 	}
 
-	abortTransaction() {
-		if (!this.session) return;
-		this.session.abortTransaction();
+	async abortTransaction() {
+		if (!this.session || !this.session.inTransaction()) return;
+		await this.session.abortTransaction();
 		this.session.endSession();
 		this.session = null;
 		this.options = {};
+	}
+
+	watch(collection, condition) {
+		if (!this.db) return null;
+		return this.db.collection(collection).watch(condition);
 	}
 
 	insertOne(collection, data) {
