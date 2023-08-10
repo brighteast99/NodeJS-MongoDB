@@ -9,8 +9,18 @@ module.exports = () => {
 	});
 
 	passport.deserializeUser((id, done) => {
-		MongoDB.findOne("user", { id: id })
-			.then((result) => {
+		const pipeline = [
+			{ $match: { id: id } },
+			{
+				$project: {
+					id: 0,
+					password: 0,
+					salt: 0,
+				},
+			},
+		];
+		MongoDB.aggregate("user", pipeline)
+			.then(([result]) => {
 				done(null, result);
 			})
 			.catch((err) => {
