@@ -1,53 +1,196 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, shrink-to-fit=no"
-    />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
-      integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N"
-      crossorigin="anonymous"
-    />
-    <title>Document</title>
-  </head>
-  <body>
-    <%- include("../components/TopNav.html") %>
+	<head>
+		<meta charset="utf-8" />
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, shrink-to-fit=no"
+		/>
+		<meta http-equiv="X-UA-Compatible" content="ie=edge" />
+		<link
+			rel="stylesheet"
+			href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css"
+			integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N"
+			crossorigin="anonymous"
+		/>
+		<link rel="stylesheet" href="../public/util.css" />
+		<link rel="stylesheet" href="../public/chatroom.css" />
+		<title>Document</title>
+	</head>
+	<body data-user="<%= JSON.stringify(user) %>">
+		<%- include("../components/TopNav.html") %>
 
-    <div class="jumbotron">
-      <div class="container">
-        <h1 class="display-4">
-          Welcome <% if(user) { %> back,
-          <a href="/my"><%= user.name %></a>
-          <% } %> !
-        </h1>
-        <p class="lead">This is a simple to-do list management app.</p>
-        <hr class="my-4" />
-        <% if(user) {%>
-        <a class="btn btn-link" href="/api/logout" role="button">Logout</a>
-        <% } else {%>
-        <p>Login and get started!</p>
-        <a class="btn btn-outline-primary" href="/login" role="button">
-          Login
-        </a>
-        <a class="btn btn-primary" href="/register" role="button">Register</a>
-        <%}%>
-      </div>
-    </div>
+		<div class="jumbotron">
+			<div class="container">
+				<h1 class="display-4">
+					Welcome <% if(user) { %> back,
+					<a href="/my"><%= user.name %></a>
+					<% } %> !
+				</h1>
+				<p class="lead">This is a simple to-do list management app.</p>
+				<hr class="my-4" />
+				<% if(user) {%>
+				<a class="btn btn-link" href="/api/logout" role="button">Logout</a>
+				<% } else {%>
+				<p>Login and get started!</p>
+				<a class="btn btn-outline-primary" href="/login" role="button">
+					Login
+				</a>
+				<a class="btn btn-primary" href="/register" role="button">Register</a>
+				<%}%>
+			</div>
+		</div>
 
-    <script
-      src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
-      integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
-      crossorigin="anonymous"
-    ></script>
-  </body>
+		<% if(user) { %>
+		<div class="container">
+			<div class="card">
+				<ul id="chat-room-content" class="list-group chat-content rounded-0">
+					<li class="list-group-item-placeholder">
+						You can chat with all active users here.<br />
+						Say hello to everyone!
+					</li>
+					<template id="chat">
+						<li>
+							<div class="chat">
+								<img class="profile" />
+								<div class="content">
+									<p class="name"></p>
+									<div class="d-flex align-items-end">
+										<span class="chat-box"></span>
+										<span class="timestamp"></span>
+									</div>
+								</div>
+							</div>
+						</li>
+					</template>
+					<template id="chat-mine">
+						<li>
+							<div class="chat mine">
+								<span class="chat-box"></span>
+								<span class="timestamp"></span>
+							</div>
+						</li>
+					</template>
+				</ul>
+				<div class="input-group" style="height: 100px">
+					<textarea
+						id="input-chat"
+						class="form-control border-0 h-100"
+						placeholder="Type a message..."
+						style="border-top-left-radius: 0; resize: none"
+					></textarea>
+					<button
+						id="btn-send"
+						class="btn btn-success"
+						disabled
+						style="
+							border-radius: 0;
+							border-bottom-right-radius: 4px;
+							min-width: 75px;
+						"
+					>
+						<span
+							id="send-loading"
+							class="spinner-border spinner-border-sm"
+							style="display: none"
+						></span>
+						<span id="send-lable"> Send </span>
+					</button>
+				</div>
+			</div>
+		</div>
+		<% } %>
+
+		<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
+		<script type="module">
+			import { io } from "https://cdn.socket.io/4.4.1/socket.io.esm.min.js";
+			const user = $("body").data("user");
+			let socket;
+			const chatRoomContent = $("#chat-room-content");
+			const chatInput = $("#input-chat");
+			const sendBtn = $("#btn-send");
+			const othersChat = $("#chat");
+			const myChat = $("#chat-mine");
+
+			$(window).on("pageshow", () => {
+				if (!user) return;
+
+				socket = io();
+				chatInput.on("input", (e) => {
+					const sendBtn = $("#btn-send");
+					if ($(e.currentTarget).val()) sendBtn.prop("disabled", false);
+					else sendBtn.prop("disabled", true);
+				});
+				chatInput.keypress((e) => {
+					if (!e.shiftKey && e.key === "Enter") {
+						e.preventDefault();
+						sendBtn.trigger("click");
+					}
+				});
+				sendBtn.click((e) => {
+					if (!socket) retrurn;
+					if (sendBtn.prop("disabled")) return;
+
+					const spinner = $("#send-loading");
+					const lable = $("#send-lable");
+
+					spinner.show();
+					lable.hide();
+					sendBtn.prop("disabled", true);
+
+					const data = {
+						sender: user,
+						content: chatInput.val(),
+					};
+
+					try {
+						socket.emit("message", data);
+						chatInput.val("");
+					} catch (err) {
+						alert(
+							"Failed to send message.\nPlease try again later or contact the administrator."
+						);
+					} finally {
+						spinner.hide();
+						lable.show();
+						if (chatInput.val()) sendBtn.prop("disabled", false);
+					}
+				});
+				socket.on("broadcast", (data) => {
+					createMessage(data);
+					chatRoomContent.scrollTop(chatRoomContent[0].scrollHeight);
+				});
+			});
+
+			$(window).on("beforeunload", () => {
+				if (socket) socket.disconnect();
+			});
+
+			function createMessage(message) {
+				let mine = message.sender._id === user._id;
+				let newChat;
+
+				if (mine) {
+					newChat = $(myChat.html());
+				} else {
+					newChat = $(othersChat.html());
+					newChat
+						.find(".profile")
+						.attr("src", message.sender.profileImage || "/public/profile.jpg");
+					newChat.find(".name").text(message.sender.name);
+				}
+
+				newChat.find("span.chat-box").text(message.content);
+				newChat
+					.find("span.timestamp")
+					.text(new Date(message.dateCreated).toLocaleDateString());
+				newChat.appendTo(chatRoomContent);
+			}
+		</script>
+		<script
+			src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"
+			integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct"
+			crossorigin="anonymous"
+		></script>
+	</body>
 </html>
