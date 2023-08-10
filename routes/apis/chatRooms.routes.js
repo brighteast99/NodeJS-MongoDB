@@ -3,7 +3,7 @@ const router = express.Router();
 const MongoDB = require("../../modules/db");
 const ObjectId = require("mongodb").ObjectId;
 
-router.get("/:id", (req, res) => {
+router.get("/:id", async (req, res) => {
 	try {
 		const id = new ObjectId(req.params.id);
 
@@ -18,7 +18,10 @@ router.get("/:id", (req, res) => {
 				},
 			},
 			{
-				$unwind: "$chats",
+				$unwind: {
+					path: "$chats",
+					preserveNullAndEmptyArrays: true,
+				},
 			},
 			{
 				$lookup: {
@@ -29,17 +32,27 @@ router.get("/:id", (req, res) => {
 				},
 			},
 			{
-				$unwind: "$chats.writer",
+				$unwind: {
+					path: "$chats.writer",
+					preserveNullAndEmptyArrays: true,
+				},
 			},
 			{
 				$group: {
 					_id: "$_id",
-					chats: { $push: "$chats" },
+					participants: { $first: "$participants" },
+					chats: {
+						$push: {
+							$cond: [{ $eq: ["$chats", {}] }, "$$REMOVE", "$chats"],
+						},
+					},
 				},
 			},
 			{
 				$project: {
 					_id: 1,
+					participants: 1,
+					"chats._id": 1,
 					"chats.writer._id": 1,
 					"chats.writer.name": 1,
 					"chats.writer.profileImage": 1,
@@ -49,12 +62,69 @@ router.get("/:id", (req, res) => {
 			},
 		];
 
-		MongoDB.aggregate("chatRooms", pipeline).then((result) =>
-			res.json(result[0])
-		);
+		const [result] = await MongoDB.aggregate("chatRooms", pipeline);
+
+		res.writeHead(200, {
+			Connection: "keep-alive",
+			"Content-Type": "text/event-stream",
+			"Cache-Control": "no-cache",
+		});
+
+		if (!result) throw new Error("Chat room not found!");
+		if (
+			!result.participants.some(
+				(participant) => participant.toString() === req.user._id.toString()
+			)
+		)
+			throw new Error("You are not a participant of this chat room!");
+
+		res.write("event: connect\n");
+		res.write(`data: ${JSON.stringify(result)}\n\n`);
+
+		const changeStream = MongoDB.watch("chats", [
+			{ $match: { "fullDocument.chatAt": id } },
+		]);
+		changeStream.on("change", async (change) => {
+			const [newMessage] = await MongoDB.aggregate("chats", [
+				{
+					$match: { _id: change.fullDocument._id },
+				},
+				{
+					$lookup: {
+						from: "user",
+						localField: "writer",
+						foreignField: "_id",
+						as: "writer",
+					},
+				},
+				{
+					$unwind: "$writer",
+				},
+				{
+					$project: {
+						_id: 1,
+						"writer._id": 1,
+						"writer.name": 1,
+						"writer.profileImage": 1,
+						dateCreated: 1,
+						message: 1,
+					},
+				},
+			]);
+			req.on("close", () => changeStream.close());
+
+			res.write("event: message\n");
+			res.write(`data: ${JSON.stringify(newMessage)}\n\n`);
+		});
 	} catch (err) {
 		console.error(err);
-		res.status(500).send();
+
+		res.write(`event: error\n`);
+		res.write(
+			`data: ${JSON.stringify({
+				message: err.message,
+			})}\n\n`
+		);
 	}
 });
 

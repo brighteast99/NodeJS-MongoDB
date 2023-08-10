@@ -147,6 +147,7 @@
 
 		<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
 		<script>
+			var eventSource;
 			const task = $("body").data("task");
 			const user = $("body").data("user");
 			const chatRoomSpinner = $("#chat-room-spinner");
@@ -156,18 +157,41 @@
 			const othersChat = $("#chat");
 			const myChat = $("#chat-mine");
 
-			if (task.chatRoom) {
-				$.ajax({
-					url: `/api/chat-rooms/${task.chatRoom}`,
-					method: "GET",
-				})
-					.done((result) => result.chats.forEach((chat) => createChat(chat)))
-					.always(() => {
+			$(window).on("pageshow", () => {
+				if (task.chatRoom) {
+					eventSource = new EventSource(`/api/chat-rooms/${task.chatRoom}`);
+
+					eventSource.addEventListener("error", (e) => {
+						const message =
+							JSON.parse(e.data).message ||
+							"Failed to connect to the chat room.\nPlease try again later or contact the administrator.";
+						alert(message);
+
+						chatRoomSpinner.hide();
+						chatRoomContent.html("");
+						chatRoomContent.css("background-color", "lightgray");
+						chatRoomContent.show();
+						chatInput.prop("disabled", true);
+
+						eventSource.close();
+					});
+
+					eventSource.addEventListener("connect", (e) => {
+						JSON.parse(e.data).chats.forEach((chat) => createChat(chat));
 						chatRoomSpinner.hide();
 						chatRoomContent.show();
 						chatRoomContent.scrollTop(chatRoomContent[0].scrollHeight);
 					});
-			}
+
+					eventSource.addEventListener("message", (e) => {
+						createChat(JSON.parse(e.data));
+						chatRoomContent.scrollTop(chatRoomContent[0].scrollHeight);
+					});
+				}
+			});
+			$(window).on("beforeunload", () => {
+				if (eventSource) eventSource.close();
+			});
 
 			$("button#btn-edit").click((e) => {
 				location.href = `/tasks/${task._id}/edit`;
@@ -258,7 +282,6 @@
 				let mine = chat.writer._id === user._id;
 				let newChat;
 
-				console.log(chat);
 				if (mine) {
 					newChat = $(myChat.html());
 				} else {
@@ -269,6 +292,7 @@
 					newChat.find(".name").text(chat.writer.name);
 				}
 
+				newChat.attr("data-id", chat._id);
 				newChat.find("span.chat-box").text(chat.message);
 				newChat
 					.find("span.timestamp")
